@@ -11,3 +11,9 @@ composer.lock
 package-lock.json
 *.map
 
+# SVN internals (we use SVN for WordPress.org, Git for development)
+.svn/
+
+# Landing page (separate Vercel project)
+kaspawoo-landing/
+
