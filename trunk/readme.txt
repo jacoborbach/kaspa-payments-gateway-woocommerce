@@ -44,17 +44,18 @@ Kaspa Payments Gateway for WooCommerce enables your WooCommerce store to accept 
 * PHP 7.4 or higher
 * Kaspa wallet (Kaspium recommended) with KPUB export capability
 
-= Installation =
+== Installation ==
 
-1. Upload the plugin files to `/wp-content/plugins/kaspa-payments-gateway-woocommerce/`
+1. Upload the plugin files to `/wp-content/plugins/kaspa-payments-gateway-woocommerce/` or install directly from WordPress Plugin Directory
 2. Activate the plugin through the 'Plugins' menu in WordPress
-3. Navigate to WooCommerce → Settings → Payments
-4. Click on "Kaspa Payments Gateway" to configure
-5. Export your KPUB from your Kaspium wallet
-6. Go to WordPress Admin → Kaspa → Wallet Setup
-7. Import your KPUB to enable payments
+3. Go to WordPress Admin → Kaspa → Wallet Setup
+4. Export your KPUB from your Kaspium wallet and paste it
+5. Click "Validate & Import KPUB"
+6. Navigate to WooCommerce → Settings → Payments
+7. Enable "Kaspa Payments" and save changes
+8. You're ready to accept Kaspa payments! 🚀
 
-= Configuration =
+== Configuration ==
 
 1. **Export KPUB from Kaspium**:
    * Open your Kaspium wallet
