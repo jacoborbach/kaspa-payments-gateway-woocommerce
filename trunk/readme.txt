@@ -2,8 +2,8 @@
 Contributors: jacobo1
 Tags: woocommerce, kaspa, cryptocurrency, payments, blockchain
 Requires at least: 5.0
-Tested up to: 6.9
-Stable tag: 1.0.1
+Tested up to: 6.8
+Stable tag: 1.0.2
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -44,18 +44,17 @@ Kaspa Payments Gateway for WooCommerce enables your WooCommerce store to accept 
 * PHP 7.4 or higher
 * Kaspa wallet (Kaspium recommended) with KPUB export capability
 
-== Installation ==
+= Installation =
 
-1. Upload the plugin files to `/wp-content/plugins/kaspa-payments-gateway-woocommerce/` or install directly from WordPress Plugin Directory
+1. Upload the plugin files to `/wp-content/plugins/kaspa-payments-gateway-woocommerce/`
 2. Activate the plugin through the 'Plugins' menu in WordPress
-3. Go to WordPress Admin → Kaspa → Wallet Setup
-4. Export your KPUB from your Kaspium wallet and paste it
-5. Click "Validate & Import KPUB"
-6. Navigate to WooCommerce → Settings → Payments
-7. Enable "Kaspa Payments" and save changes
-8. You're ready to accept Kaspa payments! 🚀
+3. Navigate to WooCommerce → Settings → Payments
+4. Click on "Kaspa Payments Gateway" to configure
+5. Export your KPUB from your Kaspium wallet
+6. Go to WordPress Admin → Kaspa → Wallet Setup
+7. Import your KPUB to enable payments
 
-== Configuration ==
+= Configuration =
 
 1. **Export KPUB from Kaspium**:
    * Open your Kaspium wallet
@@ -121,6 +120,9 @@ This plugin connects to the following third-party services to provide its functi
 
 = Changelog =
 
+= 1.0.2 =
+* Updated: Plugin website URI to kaspawoo.com
+
 = 1.0.1 =
 * Fixed: QR code now correctly includes the kaspa: prefix for wallet scanning
 * Updated: WordPress 6.9 compatibility
@@ -136,6 +138,12 @@ This plugin connects to the following third-party services to provide its functi
 * Automatic order completion on payment detection
 
 == Upgrade Notice ==
+
+= 1.0.2 =
+Updated plugin metadata.
+
+= 1.0.1 =
+Fixed QR code prefix and WP compatibility.
 
 = 1.0.0 =
 Initial release. We recommend testing on a staging site before deploying to production.

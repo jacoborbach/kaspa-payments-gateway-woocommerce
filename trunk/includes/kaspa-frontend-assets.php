@@ -351,14 +351,8 @@ function kasppaga_enqueue_address_generation_script($order_id, $is_pending = fal
     }";
 
     // Add helper functions to inline script
-    $helper_functions = "function ensureKaspaPrefix(address) {
-        if (!address) return '';
-        const trimmed = address.trim();
-        return trimmed.startsWith('kaspa:') ? trimmed : 'kaspa:' + trimmed;
-    }
-    function updatePaymentAddress(newAddress) {
-        const kaspaAddress = ensureKaspaPrefix(newAddress);
-        console.log('🔄 Updating payment address to:', kaspaAddress);
+    $helper_functions = "function updatePaymentAddress(newAddress) {
+        console.log('🔄 Updating payment address to:', newAddress);
         let amount = '0';
         const amountElements = document.querySelectorAll('.kaspa-copy-text');
         amountElements.forEach(element => {
@@ -373,9 +367,9 @@ function kasppaga_enqueue_address_generation_script($order_id, $is_pending = fal
         }
         const qrImg = document.querySelector('.kaspa-qr-image');
         if (qrImg) {
-            const qrData = encodeURIComponent(kaspaAddress + '?amount=' + amount);
+            const qrData = encodeURIComponent(newAddress + '?amount=' + amount);
             const newQrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + qrData + '&bgcolor=ffffff&color=667eea';
-            console.log('🔍 QR Data (with amount):', kaspaAddress + '?amount=' + amount);
+            console.log('🔍 QR Data (with amount):', newAddress + '?amount=' + amount);
             console.log('🔍 New QR URL:', newQrUrl);
             qrImg.src = newQrUrl;
             qrImg.onload = function () {
@@ -395,17 +389,17 @@ function kasppaga_enqueue_address_generation_script($order_id, $is_pending = fal
         addressElements.forEach(function (element) {
             const text = element.textContent || element.innerText;
             if (text.includes('kaspa:') || text.includes('Generating') || text.includes('pending')) {
-                console.log('🔄 Updating address display from:', text, 'to:', kaspaAddress);
-                element.textContent = kaspaAddress;
+                console.log('🔄 Updating address display from:', text, 'to:', newAddress);
+                element.textContent = newAddress;
                 const copyField = element.closest('.kaspa-copy-field') || element.closest('.kaspa-copy-field-compact');
                 if (copyField) {
-                    copyField.onclick = function () { copyToClipboard(kaspaAddress); };
+                    copyField.onclick = function () { copyToClipboard(newAddress); };
                 }
             }
         });
         const addressDisplay = document.getElementById('kaspa-address-display');
         if (addressDisplay) {
-            addressDisplay.textContent = kaspaAddress;
+            addressDisplay.textContent = newAddress;
         }
         console.log('✅ Address updated, payment monitoring will start automatically');
         console.log('📱 Updated all address displays with unique address');

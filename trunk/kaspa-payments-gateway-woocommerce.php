@@ -1,12 +1,12 @@
 <?php
 /**
  * Plugin Name: Kaspa Payments Gateway for WooCommerce
- * Plugin URI: https://wordpress.org/plugins/kaspa-payments-gateway-woocommerce/
+ * Plugin URI: https://kaspawoo.com/
  * Description: Accept Kaspa (KAS) cryptocurrency payments in WooCommerce with automatic order confirmation and real-time verification. KPUB watch-only wallet for secure, non-custodial payments. This plugin is not officially affiliated with Kaspa or WooCommerce.
- * Version: 1.0.1
+ * Version: 1.0.2
  * Requires at least: 5.0
  * Requires PHP: 7.4
- * Tested up to: 6.9
+ * Tested up to: 6.8
  * Author: Jacob Orbach
  * Author URI: https://github.com/jacoborbach
  * License: GPL v2 or later
@@ -21,6 +21,40 @@
 if (!defined('ABSPATH')) {
     exit;
 }
+
+/**
+ * AJAX handler for saving KPUB wallet - MOVED TO TOP
+ */
+function kasppaga_save_kpub_wallet()
+{
+    // Verify nonce
+    if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'kasppaga_save_kpub_wallet')) {
+        wp_send_json_error('Invalid nonce');
+        return;
+    }
+
+    $kpub = isset($_POST['kpub']) ? sanitize_text_field(wp_unslash($_POST['kpub'])) : '';
+    $address = isset($_POST['address']) ? sanitize_text_field(wp_unslash($_POST['address'])) : '';
+
+    if (empty($kpub) || empty($address)) {
+        error_log('KASPA: Missing data - kpub: ' . (!empty($kpub) ? 'present' : 'missing') . ', address: ' . (!empty($address) ? 'present' : 'missing'));
+        wp_send_json_error('Missing KPUB or address data');
+        return;
+    }
+
+    // Save the KPUB and address
+    update_option('kasppaga_wallet_kpub', $kpub);
+    update_option('kasppaga_wallet_address', $address);
+    update_option('kasppaga_wallet_configured', true);
+
+    error_log('KASPA: Successfully saved KPUB: ' . substr($kpub, 0, 20) . '... and address: ' . $address);
+
+    wp_send_json_success('KPUB wallet saved successfully');
+}
+
+// Register AJAX hooks immediately
+add_action('wp_ajax_kasppaga_save_kpub_wallet', 'kasppaga_save_kpub_wallet');
+add_action('wp_ajax_nopriv_kasppaga_save_kpub_wallet', 'kasppaga_save_kpub_wallet');
 
 /**
  * DEDICATED PAYMENT PAGE FUNCTIONALITY
