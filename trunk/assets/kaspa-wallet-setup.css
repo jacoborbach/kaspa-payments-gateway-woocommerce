@@ -563,13 +563,17 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    padding: 10px 0;
+    padding: 14px 16px;
     gap: 12px;
     border-bottom: 1px solid #e9ecef;
+    background: white;
+    border-radius: 8px;
+    margin-bottom: 8px;
 }
 
 .kaspa-status-item:last-child {
     border-bottom: none;
+    margin-bottom: 0;
 }
 
 .kaspa-status-label {

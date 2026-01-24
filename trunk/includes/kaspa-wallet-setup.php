@@ -178,7 +178,7 @@ class KASPPAGA_Wallet_Setup
 
                 // Force redirect
                 $redirect_url = admin_url('admin.php?page=kaspa-wallet-setup&_t=' . time());
-                echo '<script>window.location.replace("' . esc_url($redirect_url) . '");</script>';
+                echo '<script>window.location.replace(' . wp_json_encode($redirect_url) . ');</script>';
                 echo '<div class="wrap"><p>Resetting...</p></div>';
                 return;
             }
