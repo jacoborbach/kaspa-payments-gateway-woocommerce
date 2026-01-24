@@ -38,13 +38,7 @@ function kasppaga_display_thankyou_page($order_id, $gateway_instance)
 
     // Check if address is pending generation
     $address_pending = $order->get_meta('_kaspa_address_pending');
-
     $txid = $order->get_meta('_kaspa_txid');
-
-    // DEBUG: Log what we get from order meta
-    error_log('Thankyou Page Debug: Raw address meta: ' . print_r($payment_address_meta, true));
-    error_log('Thankyou Page Debug: Address type: ' . gettype($payment_address_meta));
-    error_log('Thankyou Page Debug: Address pending: ' . ($address_pending ? 'yes' : 'no'));
 
     if ($txid) {
         // Payment already confirmed - show success message
@@ -56,52 +50,39 @@ function kasppaga_display_thankyou_page($order_id, $gateway_instance)
 
     // Allow proceeding if address is pending (will be generated client-side) OR if we have an address
     if (!$expected_amount || (!$payment_address_meta && !$address_pending)) {
-        error_log('Thankyou Page Debug: Missing info - expected_amount: ' . ($expected_amount ?: 'empty') . ', address_meta: ' . ($payment_address_meta ?: 'empty') . ', pending: ' . ($address_pending ?: 'no'));
         echo '<p>Error: Payment information missing. Please contact support.</p>';
         return;
     }
 
-    // CRITICAL FIX: Ensure payment_address is a string before passing to template
+    // Ensure payment_address is a string before passing to template
     $payment_address = '';
 
-    // If address is pending, we'll handle it differently
     if ($address_pending && empty($payment_address_meta)) {
         $payment_address = 'pending-derivation';
-        error_log('Thankyou Page: Address is pending derivation - will be generated client-side');
     } elseif (is_string($payment_address_meta)) {
         $payment_address = $payment_address_meta;
-        error_log('Thankyou Page: Address is string: ' . $payment_address);
     } elseif (is_array($payment_address_meta)) {
         if (isset($payment_address_meta['address']) && is_string($payment_address_meta['address'])) {
             $payment_address = $payment_address_meta['address'];
-            error_log('Thankyou Page: Extracted address from array: ' . $payment_address);
         } else {
-            error_log('Thankyou Page: Invalid address array structure: ' . print_r($payment_address_meta, true));
             echo '<p>Error: Invalid payment address format. Please contact support.</p>';
             return;
         }
     } else {
-        error_log('Thankyou Page: Address is neither string nor array: ' . gettype($payment_address_meta));
-        // If we have expected amount, we can still proceed (address will be generated)
         if (!$expected_amount) {
             echo '<p>Error: Invalid payment address type. Please contact support.</p>';
             return;
         }
         $payment_address = 'pending-derivation';
-        error_log('Thankyou Page: Setting address to pending-derivation');
     }
 
     // Check if address is pending generation (placeholder)
     $is_pending = (strpos($payment_address, 'pending-') === 0) ||
         (empty($payment_address) && $order->get_meta('_kaspa_address_pending'));
 
-    if ($is_pending) {
-        error_log('Thankyou Page: Address is pending - will be generated client-side');
-        // Address will be generated client-side, so we can proceed
-    } else {
+    if (!$is_pending) {
         // Validate the address format for existing addresses
         if (!preg_match('/^kaspa:[a-z0-9]{61,63}$/i', $payment_address)) {
-            error_log('Thankyou Page: Invalid address format: ' . $payment_address);
             echo '<p>Error: Invalid payment address format. Please contact support.</p>';
             return;
         }
@@ -531,7 +512,6 @@ function kasppaga_render_payment_methods($payment_address, $kas_amount)
         if (is_array($payment_address) && isset($payment_address['address'])) {
             $payment_address = $payment_address['address'];
         } else {
-            error_log('Kaspa Frontend: Invalid address format');
             $payment_address = '(Generating address...)';
         }
     }

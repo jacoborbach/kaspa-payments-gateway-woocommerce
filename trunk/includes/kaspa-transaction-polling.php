@@ -74,8 +74,6 @@ class KASPPAGA_Transaction_Polling
         // Use OFFICIAL balance endpoint with FULL address
         $url = $this->api_base_url . '/addresses/' . urlencode($full_address) . '/balance';
 
-        error_log('Kaspa: Getting balance from: ' . $url);
-
         $response = wp_remote_get($url, array(
             'timeout' => 15,
             'headers' => array(
@@ -85,40 +83,28 @@ class KASPPAGA_Transaction_Polling
         ));
 
         if (is_wp_error($response)) {
-            error_log('Kaspa Balance API Error: ' . $response->get_error_message());
             return false;
         }
 
         $code = wp_remote_retrieve_response_code($response);
         $body = wp_remote_retrieve_body($response);
 
-        error_log('Kaspa Balance: Status ' . $code);
-        error_log('Kaspa Balance: Body: ' . $body);
-
         if ($code !== 200) {
-            error_log('Kaspa Balance: HTTP error ' . $code);
             return false;
         }
 
         $data = json_decode($body, true);
         if (!$data) {
-            error_log('Kaspa Balance: Invalid JSON response');
             return false;
         }
-
-        // Log the structure so we understand it
-        error_log('Kaspa Balance: Response keys: ' . implode(', ', array_keys($data)));
 
         // Look for balance field
         if (isset($data['balance'])) {
             $balance_sompi = $data['balance'];
             $balance_kas = $balance_sompi / 100000000; // Convert sompi to KAS
-
-            error_log('Kaspa Balance: Found balance: ' . $balance_kas . ' KAS');
             return $balance_kas;
         }
 
-        error_log('Kaspa Balance: No balance field found');
         return false;
     }
 
@@ -136,8 +122,6 @@ class KASPPAGA_Transaction_Polling
         // Use OFFICIAL utxos endpoint with FULL address
         $url = $this->api_base_url . '/addresses/' . urlencode($full_address) . '/utxos';
 
-        error_log('Kaspa: Getting UTXOs from: ' . $url);
-
         $response = wp_remote_get($url, array(
             'timeout' => 15,
             'headers' => array(
@@ -147,28 +131,20 @@ class KASPPAGA_Transaction_Polling
         ));
 
         if (is_wp_error($response)) {
-            error_log('Kaspa UTXO API Error: ' . $response->get_error_message());
             return false;
         }
 
         $code = wp_remote_retrieve_response_code($response);
         $body = wp_remote_retrieve_body($response);
 
-        error_log('Kaspa UTXO: Status ' . $code);
-        error_log('Kaspa UTXO: Body: ' . substr($body, 0, 1000));
-
         if ($code !== 200) {
-            error_log('Kaspa UTXO: HTTP error ' . $code);
             return false;
         }
 
         $data = json_decode($body, true);
         if (!$data) {
-            error_log('Kaspa UTXO: Invalid JSON response');
             return false;
         }
-
-        error_log('Kaspa UTXO: Response keys: ' . implode(', ', array_keys($data)));
 
         return $data;
     }
@@ -187,8 +163,6 @@ class KASPPAGA_Transaction_Polling
         // Use OFFICIAL full-transactions endpoint with FULL address
         $url = $this->api_base_url . '/addresses/' . urlencode($full_address) . '/full-transactions';
 
-        error_log('Kaspa: Getting full transactions from: ' . $url);
-
         $response = wp_remote_get($url, array(
             'timeout' => 15,
             'headers' => array(
@@ -198,28 +172,20 @@ class KASPPAGA_Transaction_Polling
         ));
 
         if (is_wp_error($response)) {
-            error_log('Kaspa Transactions API Error: ' . $response->get_error_message());
             return false;
         }
 
         $code = wp_remote_retrieve_response_code($response);
         $body = wp_remote_retrieve_body($response);
 
-        error_log('Kaspa Transactions: Status ' . $code);
-        error_log('Kaspa Transactions: Body: ' . substr($body, 0, 1000));
-
         if ($code !== 200) {
-            error_log('Kaspa Transactions: HTTP error ' . $code);
             return false;
         }
 
         $data = json_decode($body, true);
         if (!$data) {
-            error_log('Kaspa Transactions: Invalid JSON response');
             return false;
         }
-
-        error_log('Kaspa Transactions: Response keys: ' . implode(', ', array_keys($data)));
 
         return $data;
     }
@@ -230,18 +196,12 @@ class KASPPAGA_Transaction_Polling
      */
     public function check_payment_received($address, $expected_amount, $since_timestamp = null)
     {
-        error_log('Kaspa: Checking payment for address: ' . $address);
-        error_log('Kaspa: Expected amount: ' . $expected_amount . ' KAS');
-        error_log('Kaspa: Payment started at: ' . ($since_timestamp ? gmdate('Y-m-d H:i:s', $since_timestamp) : 'not set'));
-
         // If we have a timestamp, we need to check transactions to see if new payments arrived
         if ($since_timestamp) {
             // Try to get recent transactions first
             $transactions = $this->get_kaspa_full_transactions($address);
 
             if ($transactions !== false) {
-                error_log('Kaspa: Checking transactions for new payments since ' . gmdate('Y-m-d H:i:s', $since_timestamp));
-
                 // Look for transactions after our order was created
                 $new_payment_found = $this->check_new_transactions($transactions, $address, $expected_amount, $since_timestamp);
 
@@ -255,19 +215,14 @@ class KASPPAGA_Transaction_Polling
         $balance = $this->get_kaspa_balance($address);
 
         if ($balance === false) {
-            error_log('Kaspa: Failed to get balance for address: ' . $address);
             return array('found' => false, 'error' => 'API call failed');
         }
-
-        error_log('Kaspa: Current balance: ' . $balance . ' KAS');
 
         // If no timestamp provided, just check balance (for compatibility)
         if (!$since_timestamp) {
             $tolerance = 0.00000001; // 1 sompi tolerance
 
             if ($balance >= ($expected_amount - $tolerance)) {
-                error_log('Kaspa: Payment FOUND (balance check)! Expected: ' . $expected_amount . ', Balance: ' . $balance);
-
                 return array(
                     'found' => true,
                     'txid' => 'balance-confirmed-' . time(),
@@ -277,8 +232,6 @@ class KASPPAGA_Transaction_Polling
                 );
             }
         }
-
-        error_log('Kaspa: Payment NOT found. Expected: ' . $expected_amount . ', Balance: ' . $balance);
 
         return array(
             'found' => false,
@@ -304,11 +257,8 @@ class KASPPAGA_Transaction_Polling
         }
 
         if (!is_array($transactions)) {
-            error_log('Kaspa: No transactions array found in response');
             return false;
         }
-
-        error_log('Kaspa: Checking ' . count($transactions) . ' transactions for new payments');
 
         foreach ($transactions as $tx) {
             // Skip if transaction is older than our timestamp
@@ -336,8 +286,6 @@ class KASPPAGA_Transaction_Polling
 
                         // Check if amount matches (with small tolerance for rounding)
                         if (abs($received_amount - $expected_amount) < 0.00000001) {
-                            error_log('Kaspa: NEW payment found! Expected: ' . $expected_amount . ', Received: ' . $received_amount);
-
                             return array(
                                 'found' => true,
                                 'txid' => $tx['transaction_id'] ?? 'tx-' . time(),
@@ -363,7 +311,6 @@ class KASPPAGA_Transaction_Polling
         $data = $this->get_kaspa_full_transactions($address);
 
         if ($data === false) {
-            error_log('Kaspa: Failed to get transactions for address: ' . $address);
             return false;
         }
 
@@ -376,7 +323,6 @@ class KASPPAGA_Transaction_Polling
             return $data; // Direct array of transactions
         }
 
-        error_log('Kaspa: Unexpected transaction response format');
         return false;
     }
 
@@ -385,18 +331,8 @@ class KASPPAGA_Transaction_Polling
      */
     public function ajax_check_payment()
     {
-        // ADD THIS DEBUG LOG AT THE VERY START
-        $order_id_raw = isset($_POST['order_id']) ? sanitize_text_field(wp_unslash($_POST['order_id'])) : 'none';
-        error_log('Kaspa: ajax_check_payment() CALLED for order: ' . $order_id_raw);
-        // Note: Only log sanitized POST data in production
-        if (defined('WP_DEBUG') && WP_DEBUG) {
-            $sanitized_post = array_map('sanitize_text_field', wp_unslash($_POST));
-            error_log('Kaspa: POST data: ' . print_r($sanitized_post, true));
-        }
-
         // Verify nonce
         if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'kasppaga_check_payment')) {
-            error_log('Kaspa: NONCE VERIFICATION FAILED');
             wp_send_json_error('Invalid nonce');
             return;
         }
@@ -404,23 +340,18 @@ class KASPPAGA_Transaction_Polling
         $order_id = isset($_POST['order_id']) ? intval(sanitize_text_field(wp_unslash($_POST['order_id']))) : 0;
 
         if (!$order_id) {
-            error_log('Kaspa: INVALID ORDER ID');
             wp_send_json_error('Invalid order ID');
             return;
         }
 
-        error_log('Kaspa: Loading order ' . $order_id);
-
         $order = wc_get_order($order_id);
         if (!$order || $order->get_payment_method() !== 'kaspa') {
-            error_log('Kaspa: ORDER NOT FOUND or wrong payment method');
             wp_send_json_error('Invalid order or payment method');
             return;
         }
 
         // Check if already completed
         if ($order->get_status() === 'completed' || $order->get_status() === 'processing') {
-            error_log('Kaspa: Order already completed');
             wp_send_json_success(array(
                 'status' => 'completed',
                 'message' => 'Payment already confirmed!'
@@ -441,12 +372,7 @@ class KASPPAGA_Transaction_Polling
 
         $payment_started = $order->get_meta('_kaspa_payment_started');
 
-        error_log('Kaspa: Address: ' . $kaspa_address);
-        error_log('Kaspa: Amount: ' . $kaspa_amount);
-        error_log('Kaspa: Started: ' . $payment_started);
-
         if (!$kaspa_address || !$kaspa_amount) {
-            error_log('Kaspa: MISSING payment information - address or amount not set yet');
             // Don't show error if address is still being generated
             if (strpos($kaspa_address, 'pending-') === 0 || strpos($kaspa_address, 'Generating') !== false) {
                 wp_send_json_success(array(
@@ -459,26 +385,21 @@ class KASPPAGA_Transaction_Polling
             return;
         }
 
-        // NOW CHECK THE BLOCKCHAIN
-        error_log('Kaspa: About to call check_payment_received()');
+        // Check the blockchain
         $result = $this->check_payment_received($kaspa_address, $kaspa_amount, $payment_started);
-        error_log('Kaspa: check_payment_received() returned: ' . print_r($result, true));
 
         // Handle the result
         if (!is_array($result)) {
-            error_log('Kaspa: Result is not an array!');
             wp_send_json_error('Payment check failed - API error');
             return;
         }
 
         if (isset($result['error'])) {
-            error_log('Kaspa: Result has error: ' . $result['error']);
             wp_send_json_error('Payment check failed: ' . $result['error']);
             return;
         }
 
         if ($result['found']) {
-            error_log('Kaspa: PAYMENT FOUND! Completing order...');
             // Payment found! Update order
             $this->complete_order_payment($order, $result);
 
@@ -489,19 +410,9 @@ class KASPPAGA_Transaction_Polling
                 'amount' => $result['amount']
             ));
         } else {
-            // Don't show balance publicly - privacy/security concern
-            $message = '⏳ Waiting for payment...';
-
-            // Log balance for debugging (admin only)
-            if (isset($result['current_balance']) && isset($result['expected'])) {
-                error_log('Kaspa: Payment not found - Balance: ' . number_format($result['current_balance'], 8) . ' KAS, Need: ' . number_format($result['expected'], 8) . ' KAS');
-            } else {
-                error_log('Kaspa: Payment not found - waiting for payment');
-            }
-
             wp_send_json_success(array(
                 'status' => 'pending',
-                'message' => $message,
+                'message' => '⏳ Waiting for payment...',
                 'address' => $kaspa_address
             ));
         }
@@ -525,13 +436,6 @@ class KASPPAGA_Transaction_Polling
 
         // Save order
         $order->save();
-
-        // Log the successful payment
-        error_log(sprintf(
-            'Kaspa payment confirmed for Order #%d. Amount: %s KAS',
-            $order->get_id(),
-            $transaction_data['amount']
-        ));
     }
 
     /**

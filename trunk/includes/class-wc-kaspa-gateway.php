@@ -149,7 +149,6 @@ class KASPPAGA_WC_Gateway extends WC_Payment_Gateway
         $rate = $this->get_kas_rate();
         if (!$rate) {
             $rate = 0.08; // Fallback rate
-            error_log('Kaspa: Using fallback rate of $0.08 per KAS');
         }
 
         $kas_amount = round($fiat_amount / $rate, 8);
@@ -162,13 +161,10 @@ class KASPPAGA_WC_Gateway extends WC_Payment_Gateway
      */
     private function generate_payment_address($order_id)
     {
-        error_log('Kaspa: Generating address for order ' . $order_id . ' using local library');
-
         // Get the stored KPUB from wallet setup
         $kpub = get_option('kasppaga_wallet_kpub');
 
         if (!$kpub) {
-            error_log('Kaspa: No KPUB found, using main wallet address');
             return $this->get_fallback_address($order_id);
         }
 
@@ -176,21 +172,15 @@ class KASPPAGA_WC_Gateway extends WC_Payment_Gateway
         $main_address = get_option('kasppaga_wallet_address');
 
         // If address is pending derivation, we'll use a placeholder that will be updated by JS
-        // For block checkout, we need a valid format temporarily
         if ($main_address === 'pending-derivation' || empty($main_address)) {
-            error_log('Kaspa: Address pending derivation - will be generated client-side');
-            // Return a temporary placeholder - will be replaced by JS-generated address
-            // Use the first address derived from KPUB as a base (index 0)
-            return 'pending-' . $order_id; // Temporary placeholder format
+            return 'pending-' . $order_id;
         }
 
         // Validate main address format before using it
         if ($main_address && is_string($main_address) && preg_match('/^kaspa:[a-z0-9]{61,63}$/i', $main_address)) {
-            error_log('Kaspa: Using main address for order ' . $order_id . ' (unique address will be generated in JS)');
             return sanitize_text_field($main_address);
         }
 
-        error_log('Kaspa: Main address invalid format, using fallback');
         return $this->get_fallback_address($order_id);
     }
 
@@ -264,30 +254,24 @@ class KASPPAGA_WC_Gateway extends WC_Payment_Gateway
             $order = wc_get_order($order_id);
             if ($order && $order->get_payment_method() === 'kaspa') {
                 // Payment completed - they can now see the real thank you page
-                error_log("Kaspa: Order {$order_id} payment completed - thank you page now available");
             }
         }
     }
 
     /**
-     * UPDATED: Process Payment - Redirect to Dedicated Payment Page
+     * Process Payment - Redirect to Dedicated Payment Page
      */
     public function process_payment($order_id)
     {
-        error_log('Kaspa DEBUG: process_payment() called for order ' . $order_id);
-
         try {
             $order = wc_get_order($order_id);
 
             if (!$order) {
-                error_log('Kaspa DEBUG: Order not found for ID ' . $order_id);
                 return array(
                     'result' => 'failure',
                     'messages' => 'Invalid order.'
                 );
             }
-
-            error_log('Kaspa DEBUG: Order found, total: ' . $order->get_total());
 
             // Get order total and calculate KAS amount
             $order_total = $order->get_total();
@@ -295,61 +279,41 @@ class KASPPAGA_WC_Gateway extends WC_Payment_Gateway
 
             if (!$kas_rate) {
                 $kas_rate = 0.08; // Fallback rate
-                error_log('Kaspa DEBUG: Using fallback rate of $0.08 per KAS');
-            } else {
-                error_log('Kaspa DEBUG: Using live rate: $' . $kas_rate);
             }
 
             $kas_amount = $this->calculate_kaspa_amount($order_total);
-            error_log('Kaspa DEBUG: Calculated KAS amount: ' . $kas_amount);
 
             // Generate a unique payment address for this order
-            error_log('Kaspa DEBUG: About to generate payment address');
             $payment_address = $this->generate_payment_address($order_id);
-            error_log('Kaspa DEBUG: Generated address: ' . $payment_address);
 
             if (!$payment_address || !is_string($payment_address)) {
-                error_log('Kaspa DEBUG: Address generation failed - not a valid string');
                 throw new Exception('Unable to generate valid payment address. Please try again.');
             }
 
             // For addresses that start with "pending-", we'll allow them temporarily
-            // These will be updated by client-side JS to a proper address
             $is_placeholder = (strpos($payment_address, 'pending-') === 0);
 
-            if ($is_placeholder) {
-                error_log('Kaspa DEBUG: Address is placeholder - will be generated client-side');
-                // Don't validate placeholder - it will be replaced by JS
-            } else {
+            if (!$is_placeholder) {
                 // Validate address format for real addresses
                 if (!preg_match('/^kaspa:[a-z0-9]{61,63}$/i', $payment_address)) {
-                    error_log('Kaspa DEBUG: Address format validation failed: ' . $payment_address);
                     throw new Exception('Invalid payment address format generated. Please contact support.');
                 }
             }
 
-            error_log('Kaspa DEBUG: Address validation passed (or placeholder)');
-
-            // Store order meta - all as proper types
-            error_log('Kaspa DEBUG: Storing order meta data');
-            // Only store address if it's valid, otherwise leave it for client-side generation
+            // Store order meta
             if (!$is_placeholder && $payment_address && preg_match('/^kaspa:[a-z0-9]{61,63}$/i', $payment_address)) {
                 $order->update_meta_data('_kaspa_payment_address', $payment_address);
-                $order->update_meta_data('_kaspa_address', $payment_address); // Also store for polling system
-                error_log('Kaspa DEBUG: Stored payment address: ' . $payment_address);
+                $order->update_meta_data('_kaspa_address', $payment_address);
             } else {
-                // Address will be generated client-side and saved via AJAX
-                error_log('Kaspa DEBUG: Address will be generated client-side - leaving empty for now');
                 $order->update_meta_data('_kaspa_address_pending', true);
             }
-            $order->update_meta_data('_kaspa_amount', floatval($kas_amount)); // Store for polling system
+            $order->update_meta_data('_kaspa_amount', floatval($kas_amount));
             $order->update_meta_data('_kaspa_expected_amount', floatval($kas_amount));
             $order->update_meta_data('_kaspa_rate', floatval($kas_rate));
             $order->update_meta_data('_kaspa_payment_started', time());
             $order->update_meta_data('_kaspa_order_total', floatval($order_total));
 
             // Update order status to ON-HOLD for polling system
-            error_log('Kaspa DEBUG: Updating order status to on-hold');
             $address_display = (!$is_placeholder && $payment_address && preg_match('/^kaspa:[a-z0-9]{61,63}$/i', $payment_address))
                 ? $payment_address
                 : '(address will be generated)';
@@ -361,21 +325,15 @@ class KASPPAGA_WC_Gateway extends WC_Payment_Gateway
             ));
 
             $order->save();
-            error_log('Kaspa DEBUG: Order saved successfully');
 
             // Reduce stock levels
-            error_log('Kaspa DEBUG: Reducing stock levels');
             wc_reduce_stock_levels($order_id);
 
             // Remove cart
-            error_log('Kaspa DEBUG: Emptying cart');
             WC()->cart->empty_cart();
 
-            // UPDATED: Use dedicated payment page instead of checkout
+            // Use dedicated payment page
             $payment_url = home_url("/kaspa-payment/{$order_id}/{$order->get_order_key()}/");
-
-            error_log('Kaspa DEBUG: Generated payment URL: ' . $payment_url);
-            error_log('Kaspa DEBUG: About to return success result');
 
             return array(
                 'result' => 'success',
@@ -383,8 +341,6 @@ class KASPPAGA_WC_Gateway extends WC_Payment_Gateway
             );
 
         } catch (Exception $e) {
-            error_log('Kaspa DEBUG: EXCEPTION caught: ' . $e->getMessage());
-            error_log('Kaspa DEBUG: Exception trace: ' . $e->getTraceAsString());
             wc_add_notice('Payment error: ' . $e->getMessage(), 'error');
             return array(
                 'result' => 'failure',
@@ -407,12 +363,10 @@ class KASPPAGA_WC_Gateway extends WC_Payment_Gateway
             preg_match('/^kaspa:[a-z0-9]{61,63}$/i', $wallet_address) &&
             $wallet_address !== 'pending-derivation'
         ) {
-            error_log('Kaspa: Using fallback main wallet address for order ' . $order_id);
             return sanitize_text_field($wallet_address);
         }
 
         // No valid address available - return placeholder for client-side generation
-        error_log('Kaspa: No valid wallet address available, will generate client-side for order ' . $order_id);
         return 'pending-' . $order_id;
     }
 
@@ -737,9 +691,6 @@ function kasppaga_get_next_address_index()
     // Get current sequential index (starts at 0)
     $current_index = get_option('kasppaga_next_address_index', 0);
 
-    // Return current index (will be incremented when address is saved)
-    error_log('Kaspa: Returning sequential address index ' . $current_index);
-
     wp_send_json_success(array(
         'index' => $current_index,
         'message' => 'Next sequential address index'
@@ -792,13 +743,10 @@ function kasppaga_save_order_address()
         // Increment if this address index is >= current
         if ($address_index >= $next_index) {
             update_option('kasppaga_next_address_index', $address_index + 1);
-            error_log('Kaspa: Incremented next address index to: ' . ($address_index + 1));
         }
     }
 
     $order->save();
-
-    error_log('Kaspa: Saved unique address to order ' . $order_id . ' at index ' . $address_index . ': ' . $address);
 
     wp_send_json_success(array(
         'message' => 'Address saved successfully',

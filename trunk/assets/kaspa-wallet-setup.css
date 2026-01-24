@@ -562,8 +562,9 @@
 .kaspa-status-item {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    padding: 12px 0;
+    align-items: flex-start;
+    padding: 10px 0;
+    gap: 12px;
     border-bottom: 1px solid #e9ecef;
 }
 
@@ -574,11 +575,14 @@
 .kaspa-status-label {
     font-weight: 500;
     color: #666;
+    line-height: 1.4;
 }
 
 .kaspa-status-value {
     font-weight: 600;
     color: #1d2327;
+    line-height: 1.4;
+    text-align: right;
 }
 
 .kaspa-status-value.success {

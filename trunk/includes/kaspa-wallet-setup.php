@@ -116,8 +116,6 @@ class KASPPAGA_Wallet_Setup
         } else {
             // Address will need to be derived from KPUB
             // For now, we'll use a placeholder and derive it when needed
-            // TODO: Implement server-side address derivation from KPUB
-            error_log('Kaspa: KPUB saved without address - address derivation needed');
             $valid_address = null; // Will be derived when first address is needed
         }
 
@@ -127,11 +125,9 @@ class KASPPAGA_Wallet_Setup
         // Only save address if we have a valid one
         if ($valid_address) {
             update_option('kasppaga_wallet_address', $valid_address);
-            error_log('Kaspa Wallet: KPUB watch-only wallet configured with address: ' . substr($valid_address, 0, 20) . '...');
         } else {
             // Clear any old address since we'll derive it from KPUB
             delete_option('kasppaga_wallet_address');
-            error_log('Kaspa Wallet: KPUB saved - address will be derived from KPUB when needed');
         }
 
         update_option('kasppaga_wallet_configured', true);
@@ -163,6 +159,31 @@ class KASPPAGA_Wallet_Setup
      */
     public function render_setup_page()
     {
+        // BACKUP RESET HANDLER: If admin_init didn't catch it, catch it here
+        if (isset($_GET['action']) && $_GET['action'] === 'reset' && isset($_GET['_wpnonce'])) {
+            if (wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['_wpnonce'])), 'kaspa_reset_wallet')) {
+                // Clear all wallet data
+                delete_option('kasppaga_wallet_address');
+                delete_option('kasppaga_wallet_configured');
+                delete_option('kasppaga_wallet_setup_date');
+                delete_option('kasppaga_address_type');
+                delete_option('kasppaga_wallet_kpub');
+                delete_option('kasppaga_wallet_data');
+
+                $settings = get_option('woocommerce_kaspa_settings', array());
+                $settings['enabled'] = 'no';
+                unset($settings['kaspa_address']);
+                unset($settings['wallet_type']);
+                update_option('woocommerce_kaspa_settings', $settings);
+
+                // Force redirect
+                $redirect_url = admin_url('admin.php?page=kaspa-wallet-setup&_t=' . time());
+                echo '<script>window.location.replace("' . esc_url($redirect_url) . '");</script>';
+                echo '<div class="wrap"><p>Resetting...</p></div>';
+                return;
+            }
+        }
+
         $wallet_configured = get_option('kasppaga_wallet_configured');
         $wallet_address = get_option('kasppaga_wallet_address');
 
@@ -326,8 +347,9 @@ class KASPPAGA_Wallet_Setup
 
     public function maybe_reset_wallet()
     {
-        if (!is_admin() || !current_user_can('manage_options'))
+        if (!is_admin() || !current_user_can('manage_woocommerce')) {
             return;
+        }
 
         // Verify nonce for reset action
         if (isset($_GET['page']) && $_GET['page'] === 'kaspa-wallet-setup' && isset($_GET['action']) && $_GET['action'] === 'reset') {
@@ -335,7 +357,6 @@ class KASPPAGA_Wallet_Setup
                 wp_die('Security check failed');
                 return;
             }
-            error_log('[Kaspa Wallet] Reset triggered by admin');
 
             // Clear all wallet data
             delete_option('kasppaga_wallet_address');
@@ -351,7 +372,16 @@ class KASPPAGA_Wallet_Setup
             unset($settings['wallet_type']);
             update_option('woocommerce_kaspa_settings', $settings);
 
-            wp_safe_redirect(admin_url('admin.php?page=kaspa-wallet-setup'));
+            // Send no-cache headers
+            nocache_headers();
+
+            // Force a hard redirect using JavaScript to clear browser history/cache state
+            $redirect_url = admin_url('admin.php?page=kaspa-wallet-setup&_t=' . time());
+            
+            echo '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url=' . esc_url($redirect_url) . '"></head><body>';
+            echo '<script type="text/javascript">window.location.replace("' . esc_url($redirect_url) . '");</script>';
+            echo '<p>Resetting wallet... <a href="' . esc_url($redirect_url) . '">Click here if not redirected</a></p>';
+            echo '</body></html>';
             exit;
         }
     }
@@ -519,6 +549,7 @@ class KASPPAGA_Wallet_Setup
         $consolidated_balance_nonce = wp_create_nonce('kasppaga_consolidated_balance');
         $kpub_js = esc_js(get_option('kasppaga_wallet_kpub', ''));
         $reset_url = wp_nonce_url(admin_url('admin.php?page=kaspa-wallet-setup&action=reset'), 'kaspa_reset_wallet');
+        $reset_redirect_url = admin_url('admin.php?page=kaspa-wallet-setup');
 
         // Build inline script
         $wallet_setup_script = "document.addEventListener('DOMContentLoaded', function () {
@@ -674,9 +705,37 @@ class KASPPAGA_Wallet_Setup
             }
         }
         function reconfigureWallet() {
-            if (confirm('Are you sure you want to reconfigure your wallet? This will remove your current KPUB configuration and you will need to import a new KPUB.')) {
-                window.location.href = '" . esc_js($reset_url) . "';
+            if (!confirm('Are you sure you want to reconfigure your wallet? This will remove your current KPUB configuration and you will need to import a new KPUB.')) {
+                return;
             }
+            if (typeof kaspaWalletSetup === 'undefined' || !kaspaWalletSetup.ajaxUrl || !kaspaWalletSetup.nonce) {
+                alert('Unable to reset wallet. Please refresh the page and try again.');
+                return;
+            }
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', kaspaWalletSetup.ajaxUrl, true);
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4) {
+                    if (xhr.status === 200) {
+                        try {
+                            const response = JSON.parse(xhr.responseText);
+                            if (response.success) {
+                                const target = " . wp_json_encode($reset_redirect_url) . ";
+                                window.location.replace(target + '&_t=' + Date.now());
+                                return;
+                            }
+                            alert('Reset failed: ' + (response.data || 'Unknown error'));
+                        } catch (e) {
+                            alert('Reset failed: Invalid server response');
+                        }
+                    } else {
+                        alert('Reset failed: Network error');
+                    }
+                }
+            };
+            const data = 'action=kasppaga_clear_wallet&nonce=' + encodeURIComponent(kaspaWalletSetup.nonce);
+            xhr.send(data);
         }";
 
         // Add inline script to the already enqueued script
