@@ -86,22 +86,6 @@ class KASPPAGA_Admin_Dashboard
                 </div>
             </div>
 
-            <!-- Quick Actions -->
-            <div class="kaspa-quick-actions" style="margin: 20px 0; padding: 15px; background: #fff; border: 1px solid #ddd; border-radius: 8px;">
-                <h2 style="margin-top: 0; font-size: 16px;">⚡ Quick Actions</h2>
-                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                    <a href="<?php echo esc_url(admin_url('admin.php?page=kaspa-wallet-setup')); ?>" class="button">
-                        🔑 Wallet Setup
-                    </a>
-                    <a href="<?php echo esc_url(admin_url('admin.php?page=wc-settings&tab=checkout&section=kaspa')); ?>" class="button button-primary">
-                        ⚙️ Payment Settings
-                    </a>
-                    <a href="<?php echo esc_url(admin_url('edit.php?post_type=shop_order&payment_method=kaspa')); ?>" class="button">
-                        📦 View All Orders
-                    </a>
-                </div>
-            </div>
-
             <!-- Wallet Balance Section -->
             <?php $this->render_wallet_balance_section(); ?>
 

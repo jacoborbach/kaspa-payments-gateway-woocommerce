@@ -675,7 +675,7 @@ class KASPPAGA_Wallet_Setup
         }
         function reconfigureWallet() {
             if (confirm('Are you sure you want to reconfigure your wallet? This will remove your current KPUB configuration and you will need to import a new KPUB.')) {
-                window.location.href = '" . esc_js($reset_url) . "';
+                window.location.href = '" . esc_url($reset_url) . "';
             }
         }";
 

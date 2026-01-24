@@ -464,10 +464,8 @@ class KASPPAGA_WC_Gateway extends WC_Payment_Gateway
     {
         $wallet_configured = get_option('kasppaga_wallet_configured');
         $wallet_address = get_option('kasppaga_wallet_address');
-        $wallet_kpub = get_option('kasppaga_wallet_kpub');
 
-        // Consider wallet configured if we have KPUB (even if address is pending derivation)
-        if ($wallet_configured && ($wallet_address || $wallet_kpub)) {
+        if ($wallet_configured && $wallet_address) {
             $setup_url = admin_url('admin.php?page=kaspa-wallet-setup');
             return '<div style="background: #d1e7dd; padding: 12px; border-radius: 4px; border: 1px solid #a3cfbb;">
                 <strong style="color: #0f5132;">✅ Non-Custodial Wallet Active</strong><br>
