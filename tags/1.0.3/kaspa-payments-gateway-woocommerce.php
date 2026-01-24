@@ -428,8 +428,7 @@ new KASPPAGA_Plugin();
  * Plugin activation hook - flush rewrite rules for custom payment page URL
  */
 register_activation_hook(__FILE__, 'kasppaga_plugin_activate');
-function kasppaga_plugin_activate()
-{
+function kasppaga_plugin_activate() {
     // Add the rewrite rule first
     kasppaga_add_payment_rewrite_rule();
     // Then flush to register it
@@ -440,8 +439,7 @@ function kasppaga_plugin_activate()
  * Plugin deactivation hook - clean up rewrite rules
  */
 register_deactivation_hook(__FILE__, 'kasppaga_plugin_deactivate');
-function kasppaga_plugin_deactivate()
-{
+function kasppaga_plugin_deactivate() {
     flush_rewrite_rules();
 }
 
