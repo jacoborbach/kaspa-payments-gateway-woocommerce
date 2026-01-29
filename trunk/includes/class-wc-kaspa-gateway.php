@@ -147,8 +147,8 @@ class KASPPAGA_WC_Gateway extends WC_Payment_Gateway
     public function calculate_kaspa_amount($fiat_amount)
     {
         $rate = $this->get_kas_rate();
-        if (!$rate) {
-            $rate = 0.08; // Fallback rate
+        if (!$rate || $rate <= 0) {
+            return 0; // Caller must check rate; do not use a hardcoded fallback
         }
 
         $kas_amount = round($fiat_amount / $rate, 8);
@@ -277,8 +277,8 @@ class KASPPAGA_WC_Gateway extends WC_Payment_Gateway
             $order_total = $order->get_total();
             $kas_rate = $this->get_kas_rate();
 
-            if (!$kas_rate) {
-                $kas_rate = 0.08; // Fallback rate
+            if (!$kas_rate || $kas_rate <= 0) {
+                throw new Exception(__('Unable to fetch current exchange rate. Please try again or choose another payment method.', 'kaspa-payments-gateway-woocommerce'));
             }
 
             $kas_amount = $this->calculate_kaspa_amount($order_total);
