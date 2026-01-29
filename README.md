@@ -26,9 +26,7 @@ Accept **Kaspa (KAS)** cryptocurrency payments in WooCommerce with automatic ord
    Install from the [WordPress plugin directory](https://wordpress.org/plugins/kaspa-payments-gateway-woocommerce/): **Plugins → Add New**, search for “Kaspa Payments Gateway”, then **Install Now** and **Activate**.
 
 2. **From this repo**  
-   The plugin code lives in the `trunk/` directory. Either:
-   - [Download a release](https://github.com/jacoborbach/kaspa-payments-gateway-woocommerce/releases) and upload the zip via **Plugins → Add New → Upload**, or  
-   - Copy the contents of `trunk/` into `wp-content/plugins/kaspa-payments-gateway-woocommerce/`.
+   The plugin code lives in the `trunk/` directory. Clone the repo, zip the contents of `trunk/`, then upload via **Plugins → Add New → Upload**—or copy the contents of `trunk/` into `wp-content/plugins/kaspa-payments-gateway-woocommerce/`.
 
 3. Activate the plugin (if not already), then configure under **WooCommerce → Settings → Payments** and **Kaspa → Wallet Setup** (import your KPUB from Kaspium).
 
