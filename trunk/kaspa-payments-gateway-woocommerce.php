@@ -11,6 +11,7 @@
  * Author URI: https://github.com/jacoborbach
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
+ * Copyright (C) 2024–2025 Jorbach
  * Text Domain: kaspa-payments-gateway-woocommerce
  * Requires Plugins: woocommerce
  * WC requires at least: 3.0
