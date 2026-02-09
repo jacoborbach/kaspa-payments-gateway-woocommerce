@@ -2,8 +2,8 @@
 Contributors: jacobo1
 Tags: woocommerce, kaspa, cryptocurrency, payments, blockchain
 Requires at least: 5.0
-Tested up to: 6.8
-Stable tag: 1.0.4
+Tested up to: 6.9.1
+Stable tag: 1.0.5
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -14,64 +14,45 @@ Accept Kaspa (KAS) cryptocurrency payments in WooCommerce with automatic order c
 
 Kaspa Payments Gateway for WooCommerce enables your WooCommerce store to accept Kaspa (KAS) cryptocurrency payments. Built with security and simplicity in mind, using KPUB (Extended Public Key) watch-only wallets for non-custodial payment processing.
 
-**Important**: This plugin is not officially affiliated with, endorsed by, or connected to Kaspa, WooCommerce, or their respective owners. Kaspa is a decentralized cryptocurrency, and this plugin is an independent third-party integration.
-
-**Note**: This is an initial release. We recommend testing on a staging site before deploying to production.
+**Important**: This plugin is not officially affiliated with, endorsed by, or connected to Kaspa, WooCommerce, or their respective owners.
 
 = Key Features =
 
-* **KPUB Watch-Only Wallet**: Secure, non-custodial payment processing. No private keys stored.
-* **Automatic Payment Detection**: Real-time payment monitoring via Kaspa API
-* **Unique Address Per Order**: Each order gets a dedicated payment address for better tracking
-* **Real-Time Exchange Rates**: Automatic USD to KAS conversion using CoinGecko API
-* **QR Code Support**: Easy payment scanning with QR codes
-* **Classic & Block Checkout**: Supports both WooCommerce checkout styles
-* **Sequential Address Generation**: Addresses visible in Kaspium wallet automatically
-* **Live Price Updates**: Payment amounts update with exchange rate fluctuations
-
-= Security =
-
-* No private keys or mnemonics stored
-* KPUB (Extended Public Key) only - safe to store
-* All user input sanitized
-* WordPress nonce verification on all AJAX requests
-* Capability checks for admin functions
+* **KPUB Watch-Only Wallet** – Secure, non-custodial payment processing. No private keys stored.
+* **Automatic Payment Detection** – Real-time payment monitoring via Kaspa API.
+* **Unique Address Per Order** – Each order gets a dedicated payment address for better tracking.
+* **Real-Time Exchange Rates** – Automatic USD to KAS conversion with 8 configurable price sources.
+* **QR Code Support** – Easy payment scanning with QR codes.
+* **Classic & Block Checkout** – Supports both WooCommerce checkout styles.
 
 = Requirements =
 
-* WordPress 5.0 or higher
-* WooCommerce 3.0 or higher
-* PHP 7.4 or higher
+* WordPress 5.0+
+* WooCommerce 3.0+
+* PHP 7.4+
 * Kaspa wallet (Kaspium recommended) with KPUB export capability
 
-= Installation =
+== Installation ==
 
 1. Upload the plugin files to `/wp-content/plugins/kaspa-payments-gateway-woocommerce/`
 2. Activate the plugin through the 'Plugins' menu in WordPress
-3. Navigate to WooCommerce → Settings → Payments
-4. Click on "Kaspa Payments Gateway" to configure
-5. Export your KPUB from your Kaspium wallet
-6. Go to WordPress Admin → Kaspa → Wallet Setup
-7. Import your KPUB to enable payments
+3. Go to **Kaspa → Wallet Setup** and import your KPUB from Kaspium
+4. Enable the payment method in **WooCommerce → Settings → Payments**
 
 = Configuration =
 
-1. **Export KPUB from Kaspium**:
-   * Open your Kaspium wallet
-   * Navigate to Settings or Export
-   * Copy your Extended Public Key (KPUB) - starts with "kpub"
+1. **Export KPUB from Kaspium**: Open your Kaspium wallet → Settings → Export Extended Public Key
+2. **Import in WordPress**: Kaspa → Wallet Setup → Paste KPUB → Validate & Import
+3. **Enable Payments**: WooCommerce → Settings → Payments → Enable "Kaspa Payments"
 
-2. **Configure Wallet in WordPress**:
-   * Go to WordPress Admin → Kaspa → Wallet Setup
-   * Paste your KPUB
-   * Click "Validate & Import KPUB"
+== Screenshots ==
 
-3. **Enable Payment Method**:
-   * Go to WooCommerce → Settings → Payments
-   * Enable "Kaspa Payments"
-   * Save changes
+1. Dashboard with Total Sales, Total Orders, Success Rate, and Recent Orders
+2. Customer payment page with QR code, address, and amount to send
+3. Wallet active – KPUB watch-only status and benefits
+4. Wallet setup – Import Extended Public Key (KPUB)
 
-= Frequently Asked Questions =
+== Frequently Asked Questions ==
 
 = Does this store my private keys? =
 
@@ -91,86 +72,64 @@ Payment amounts update in real-time based on current exchange rates. Customers s
 
 = Will addresses appear in my Kaspium wallet? =
 
-Yes. Addresses are generated sequentially starting from index 0, so they automatically appear in Kaspium wallets which scan low indices.
+Yes. Addresses are generated sequentially starting from index 0, so they automatically appear in Kaspium wallets.
 
-== External Services ==
+== Changelog ==
 
-This plugin connects to the following third-party services to provide its functionality:
-
-**Kaspa API (https://api.kaspa.org)**
-* **Purpose**: Used to check payment addresses for received funds and verify transactions on the Kaspa blockchain.
-* **Data Sent**: Payment addresses (public blockchain addresses only, no private keys or personal data).
-* **When**: Automatically when checking order payment status and during periodic payment verification.
-* **Terms of Service**: https://api.kaspa.org (Kaspa is a decentralized cryptocurrency network)
-* **Privacy Policy**: N/A (public blockchain data only)
-
-**CoinGecko API (https://api.coingecko.com)**
-* **Purpose**: Primary source for real-time exchange rates to convert USD order amounts to Kaspa (KAS) cryptocurrency.
-* **Data Sent**: API request for Kaspa/USD exchange rate (no user data).
-* **When**: When displaying payment amounts on checkout pages and updating live prices. If CoinGecko is unavailable, the plugin tries CryptoCompare as fallback.
-* **Terms of Service**: https://www.coingecko.com/en/terms
-* **Privacy Policy**: https://www.coingecko.com/en/privacy
-
-**CryptoCompare API (https://min-api.cryptocompare.com)**
-* **Purpose**: Fallback source for KAS/USD exchange rate when CoinGecko is unavailable.
-* **Data Sent**: API request for KAS/USD price (no user data).
-* **When**: Only when CoinGecko fails (e.g. timeout or down). No API key required for the price endpoint used.
-* **Terms of Service**: https://www.cryptocompare.com/terms
-* **Privacy Policy**: https://www.cryptocompare.com/privacy-policy
-
-**QR Server API (https://api.qrserver.com)**
-* **Purpose**: Generates QR codes for payment addresses to make it easier for customers to scan and pay.
-* **Data Sent**: Payment address and amount (public blockchain data only, no personal information).
-* **When**: When displaying the payment QR code on checkout and order pages.
-* **Terms of Service**: https://goqr.me/api/terms-of-service/
-* **Privacy Policy**: https://goqr.me/api/privacy-policy/
-
-= Changelog =
+= 1.0.5 =
+* Added: Configurable exchange rate source order (1st, 2nd, 3rd choice) in gateway settings
+* Added: Eight spot-only price sources: Kaspa API, CoinGecko, CryptoCompare, MEXC, KuCoin, Gate.io, HTX, CoinEx
+* Changed: Rate fetch tries selected sources in order with 5-minute cache
+* Improved: External services documentation
 
 = 1.0.4 =
-* Added: CryptoCompare as fallback when CoinGecko rate API is unavailable
-* Added: Dismissible "Leave a review" notice on Kaspa admin pages (Dashboard, Wallet Setup, Analytics)
-* Changed: Rate fetch now fails safely (no hardcoded fallback) if both APIs fail
-* Improved: Documented 5-minute rate cache (CoinGecko free tier 10k calls/month)
+* Added: CryptoCompare as fallback when CoinGecko is unavailable
+* Added: Dismissible "Leave a review" notice on Kaspa admin pages
+* Changed: Rate fetch fails safely if all APIs fail
 
 = 1.0.3 =
 * Fixed: Payment page rewrite rules on fresh installs
 * Fixed: Wallet status detection when KPUB is set
 * Fixed: Reconfigure wallet reset flow and cache behavior
 * Added: Admin quick actions links
-* Improved: Wallet status layout spacing
 
 = 1.0.2 =
-* Updated: Plugin website URI to kaspawoo.com
+* Updated: Plugin website URI
 
 = 1.0.1 =
-* Fixed: QR code now correctly includes the kaspa: prefix for wallet scanning
+* Fixed: QR code now includes kaspa: prefix for wallet scanning
 * Updated: WordPress 6.9 compatibility
 
 = 1.0.0 =
 * Initial release
 * KPUB watch-only wallet support
-* Sequential address generation starting from index 0
+* Sequential address generation
 * Real-time payment detection via Kaspa API
-* Live exchange rate updates via CoinGecko
+* Live exchange rate updates
 * QR code payment support
 * Classic and block checkout compatibility
-* Automatic order completion on payment detection
 
 == Upgrade Notice ==
 
+= 1.0.5 =
+Configurable price sources (1st/2nd/3rd choice) and eight spot-only APIs for exchange rates.
+
 = 1.0.4 =
-Adds CryptoCompare fallback, safe rate fail, and a dismissible review prompt on Kaspa admin pages.
+Adds CryptoCompare fallback and dismissible review prompt.
 
 = 1.0.3 =
 Fixes wallet reset, status display, and payment page routing.
 
-= 1.0.2 =
-Updated plugin metadata.
+== External Services ==
 
-= 1.0.1 =
-Fixed QR code prefix and WP compatibility.
+This plugin connects to the following third-party services:
 
-= 1.0.0 =
-Initial release. We recommend testing on a staging site before deploying to production.
+**Kaspa API (api.kaspa.org)** – Payment verification and optional price source. Sends payment addresses only (public blockchain data). [More info](https://api.kaspa.org)
+
+**Price APIs** – Configurable sources for KAS/USD rates (no user data sent):
+* CoinGecko ([Terms](https://www.coingecko.com/en/terms) | [Privacy](https://www.coingecko.com/en/privacy))
+* CryptoCompare ([Terms](https://www.cryptocompare.com/terms) | [Privacy](https://www.cryptocompare.com/privacy-policy))
+* MEXC, KuCoin, Gate.io, HTX, CoinEx – Public ticker endpoints (no API key required)
+
+**QR Server API (api.qrserver.com)** – Generates QR codes for payment addresses. Sends address and amount only. ([Terms](https://goqr.me/api/terms-of-service/) | [Privacy](https://goqr.me/api/privacy-policy/))
 

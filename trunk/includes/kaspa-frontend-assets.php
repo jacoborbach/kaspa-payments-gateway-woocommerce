@@ -151,12 +151,6 @@ function kasppaga_enqueue_address_generation_script($order_id, $is_pending = fal
         const maxAttempts = 20;
         function checkAndGenerate() {
             attempts++;
-            if (attempts === 1) {
-                console.log('🔍 Attempt', attempts, '- Checking for wallet library...');
-                console.log('  - window.kaspaWallet:', typeof window.kaspaWallet !== 'undefined' ? '✅' : '❌');
-                console.log('  - window.KaspaWallet:', typeof window.KaspaWallet !== 'undefined' ? '✅' : '❌');
-                console.log('  - window.wallet:', typeof window.wallet !== 'undefined' ? '✅' : '❌');
-            }
             const walletLib = window.kaspaWallet || window.KaspaWallet || window.wallet;
             let walletLibAlt = null;
             if (window.kaspa && window.kaspa.wallet) {
@@ -165,20 +159,9 @@ function kasppaga_enqueue_address_generation_script($order_id, $is_pending = fal
                 walletLibAlt = window.Kaspa.Wallet;
             }
             const finalWalletLib = walletLib || walletLibAlt;
-            if (attempts === 1 && finalWalletLib) {
-                console.log('🔍 Wallet library found! Available methods:', Object.getOwnPropertyNames(finalWalletLib).filter(name => typeof finalWalletLib[name] === 'function'));
-                console.log('🔍 Wallet library prototype methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(finalWalletLib || {})).filter(name => name !== 'constructor'));
-                if (finalWalletLib.constructor) {
-                    console.log('🔍 Constructor:', finalWalletLib.constructor.name);
-                }
-            }
             const hasGenerateMethod = finalWalletLib && typeof finalWalletLib.generateAddressesUniversal === 'function';
             if (finalWalletLib && hasGenerateMethod) {
-                console.log('✅ Kaspa wallet library loaded (attempt', attempts, '), generating address...');
-                console.log('  - Using method: generateAddressesUniversal');
                 if (isPending || !existingAddress) {
-                    console.log('🔧 Generating unique address for order:', orderId, 'with KPUB:', kpub.substring(0, 20) + '...');
-                    console.log('📝 Getting address index for order:', orderId);
                     const indexXhr = new XMLHttpRequest();
                     indexXhr.open('POST', '" . esc_url($ajax_url) . "', true);
                     indexXhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
@@ -188,58 +171,16 @@ function kasppaga_enqueue_address_generation_script($order_id, $is_pending = fal
                                 const indexResponse = JSON.parse(indexXhr.responseText);
                                 if (indexResponse.success) {
                                     const addressIndex = parseInt(indexResponse.data.index, 10);
-                                    console.log('✅ Got next sequential address index:', addressIndex);
-                                    console.log('  - Order ID:', orderId);
-                                    console.log('  - Address Index:', addressIndex, '(type:', typeof addressIndex + ')');
-                                    console.log('  - ✅ This address will be visible in Kaspium (sequential indexing at low index)');
-                                    console.log('🔍 CRITICAL VERIFICATION: Generating addresses at indices 0-5 to verify KPUB matches your wallet...');
-                                    console.log('  - If these addresses DON\\'T match your Kaspium wallet, the KPUB is WRONG!');
-                                    finalWalletLib.generateAddressesUniversal(kpub, 0, 6)
-                                        .then(function (verifyResult) {
-                                            if (verifyResult && verifyResult.addresses && Array.isArray(verifyResult.addresses)) {
-                                                console.log('═══════════════════════════════════════════════════════════');
-                                                console.log('🔍 KPUB VERIFICATION - Generated Addresses:');
-                                                console.log('═══════════════════════════════════════════════════════════');
-                                                verifyResult.addresses.forEach(function (addrData, idx) {
-                                                    console.log('  Index ' + addrData.index + ': ' + addrData.address);
-                                                    console.log('    Path: ' + addrData.path);
-                                                    console.log('    Full Derivation: ' + (addrData.derivationPath || 'm/44\\'/111111\\'/0\\'') + '/' + addrData.path.replace('m/', ''));
-                                                });
-                                                console.log('═══════════════════════════════════════════════════════════');
-                                                console.log('⚠️ ACTION REQUIRED:');
-                                                console.log('   1. Open your Kaspium wallet');
-                                                console.log('   2. Check if the address at Index 0 matches your wallet\\'s FIRST address');
-                                                console.log('   3. If NO MATCH: The KPUB is incorrect! Re-export from Kaspium.');
-                                                console.log('   4. If MATCH: Addresses should appear in Kaspium automatically.');
-                                                console.log('═══════════════════════════════════════════════════════════');
-                                            } else {
-                                                console.warn('⚠️ Could not generate verification addresses');
-                                            }
-                                        })
-                                        .catch(function (e) {
-                                            console.warn('⚠️ Verification failed:', e.message);
-                                        });
                                     const numericIndex = parseInt(addressIndex, 10);
                                     if (isNaN(numericIndex)) {
                                         throw new Error('Invalid address index: ' + addressIndex);
                                     }
-                                    console.log('📝 Calling generateAddressesUniversal with:', {
-                                        kpub: kpub.substring(0, 30) + '...',
-                                        startIndex: numericIndex,
-                                        count: 1
-                                    });
                                     finalWalletLib.generateAddressesUniversal(kpub, numericIndex, 1)
                                         .then(function (result) {
-                                            console.log('📝 FULL Result from generateAddressesUniversal:', JSON.stringify(result, null, 2));
                                             if (result && result.addresses && Array.isArray(result.addresses) && result.addresses.length > 0) {
                                                 const addressData = result.addresses[0];
                                                 const address = addressData.address;
                                                 if (address && typeof address === 'string' && address.startsWith('kaspa:')) {
-                                                    console.log('✅ Generated unique address:', address);
-                                                    console.log('  - Path:', addressData.path);
-                                                    console.log('  - Index:', addressData.index);
-                                                    console.log('  - Full address data:', JSON.stringify(addressData, null, 2));
-                                                    console.log('  - ✅ Address generated using orderId + offset strategy (ensures uniqueness)');
                                                     updatePaymentAddress(address);
                                                     saveOrderAddress(orderId, address, numericIndex);
                                                 } else {
@@ -300,13 +241,8 @@ function kasppaga_enqueue_address_generation_script($order_id, $is_pending = fal
                                 console.error('❌ Fallback address generation also failed:', error);
                             });
                     }
-                } else {
-                    console.log('✅ Address already exists for order:', orderId, existingAddress);
                 }
             } else if (attempts < maxAttempts) {
-                if (attempts % 5 === 0) {
-                    console.log('⏳ Waiting for wallet library... (attempt', attempts, '/', maxAttempts, ')');
-                }
                 setTimeout(checkAndGenerate, 500);
             } else {
                 console.error('❌ Kaspa wallet library failed to load after', maxAttempts, 'attempts');
@@ -333,28 +269,22 @@ function kasppaga_enqueue_address_generation_script($order_id, $is_pending = fal
 
     // Add helper functions to inline script
     $helper_functions = "function updatePaymentAddress(newAddress) {
-        console.log('🔄 Updating payment address to:', newAddress);
         let amount = '0';
         const amountElements = document.querySelectorAll('.kaspa-copy-text');
         amountElements.forEach(element => {
             if (element.textContent.includes('KAS') && !element.textContent.includes('kaspa:')) {
                 amount = element.textContent.replace(' KAS', '').trim();
-                console.log('💰 Found amount:', amount);
             }
         });
         if (amount === '0' && window.kaspaCheckoutData && window.kaspaCheckoutData.expectedAmount) {
             amount = window.kaspaCheckoutData.expectedAmount;
-            console.log('💰 Using expected amount:', amount);
         }
         const qrImg = document.querySelector('.kaspa-qr-image');
         if (qrImg) {
             const qrData = encodeURIComponent(newAddress + '?amount=' + amount);
             const newQrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + qrData + '&bgcolor=ffffff&color=667eea';
-            console.log('🔍 QR Data (with amount):', newAddress + '?amount=' + amount);
-            console.log('🔍 New QR URL:', newQrUrl);
             qrImg.src = newQrUrl;
             qrImg.onload = function () {
-                console.log('✅ QR code image updated successfully');
                 // Update the QR note text from Generating to Scan to pay
                 const qrNote = document.querySelector('.kaspa-qr-note');
                 if (qrNote) {
@@ -370,7 +300,6 @@ function kasppaga_enqueue_address_generation_script($order_id, $is_pending = fal
         addressElements.forEach(function (element) {
             const text = element.textContent || element.innerText;
             if (text.includes('kaspa:') || text.includes('Generating') || text.includes('pending')) {
-                console.log('🔄 Updating address display from:', text, 'to:', newAddress);
                 element.textContent = newAddress;
                 const copyField = element.closest('.kaspa-copy-field') || element.closest('.kaspa-copy-field-compact');
                 if (copyField) {
@@ -382,8 +311,6 @@ function kasppaga_enqueue_address_generation_script($order_id, $is_pending = fal
         if (addressDisplay) {
             addressDisplay.textContent = newAddress;
         }
-        console.log('✅ Address updated, payment monitoring will start automatically');
-        console.log('📱 Updated all address displays with unique address');
     }
     function saveOrderAddress(orderId, address, addressIndex) {
         const xhr = new XMLHttpRequest();
@@ -394,10 +321,7 @@ function kasppaga_enqueue_address_generation_script($order_id, $is_pending = fal
                 try {
                     const response = JSON.parse(xhr.responseText);
                     if (response.success) {
-                        console.log('💾 Unique address saved to order at index', addressIndex || 'unknown');
-                        if (response.data && response.data.index !== undefined) {
-                            console.log('  - Next address index will be:', response.data.index + 1);
-                        }
+                        // Address saved successfully
                     } else {
                         console.error('❌ Failed to save address:', response.data);
                     }
@@ -431,7 +355,7 @@ function kasppaga_enqueue_checkout_assets($gateway_instance, $order_id, $expecte
         'kaspa-checkout-style',
         plugin_dir_url(__DIR__) . 'assets/kaspa-checkout.css',
         array(),
-        '2.0.0'
+        '2.1.1'
     );
 
     // Enqueue checkout JS
@@ -596,8 +520,7 @@ function kasppaga_render_payment_methods($payment_address, $kas_amount)
     // Add inline script
     $qr_data_js = esc_js($payment_address . '?amount=' . $kas_amount_formatted);
     $payment_methods_script = "document.addEventListener('DOMContentLoaded', function () {
-        console.log('✅ Kaspa payment methods loaded with QR code');
-        console.log('QR Data:', '{$qr_data_js}');
+        // Payment methods loaded
     });";
     wp_add_inline_script('kaspa-payment-methods', $payment_methods_script);
 

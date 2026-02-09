@@ -3,10 +3,10 @@
  * Plugin Name: Kaspa Payments Gateway for WooCommerce
  * Plugin URI: https://kaspawoo.com/
  * Description: Accept Kaspa (KAS) cryptocurrency payments in WooCommerce with automatic order confirmation and real-time verification. KPUB watch-only wallet for secure, non-custodial payments. This plugin is not officially affiliated with Kaspa or WooCommerce.
- * Version: 1.0.4
+ * Version: 1.0.5
  * Requires at least: 5.0
  * Requires PHP: 7.4
- * Tested up to: 6.8
+ * Tested up to: 6.9.1
  * Author: Jorbach
  * Author URI: https://github.com/jacoborbach
  * License: GPL v2 or later
@@ -132,10 +132,7 @@ function kasppaga_display_dedicated_payment_page($order)
             .kaspa-header h1 {
                 font-size: 36px;
                 margin-bottom: 16px;
-                color: #333;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
+                color: #1d2327;
             }
 
             .kaspa-header p {
@@ -153,7 +150,7 @@ function kasppaga_display_dedicated_payment_page($order)
 
                 <!-- Page Header -->
                 <div class="kaspa-header">
-                    <h1>💰 Complete Your Payment</h1>
+                    <h1>Complete Your Payment</h1>
                     <p>
                         Order #<?php echo esc_html($order->get_id()); ?> •
                         <?php echo wp_kses_post(wc_price($order->get_total())); ?>
@@ -190,6 +187,18 @@ class KASPPAGA_Plugin
         add_action('woocommerce_blocks_loaded', array($this, 'register_blocks_integration'));
         // WebSocket AJAX hooks removed - using polling system instead
 
+        // Add settings link to Plugins page
+        add_filter('plugin_action_links_' . plugin_basename(__FILE__), array($this, 'add_settings_link'));
+    }
+
+    /**
+     * Add "Settings" link to Plugins page
+     */
+    public function add_settings_link($links)
+    {
+        $settings_link = '<a href="' . admin_url('admin.php?page=kaspa-payments-gateway') . '">Settings</a>';
+        array_unshift($links, $settings_link);
+        return $links;
     }
 
     /**
@@ -203,6 +212,11 @@ class KASPPAGA_Plugin
 
         $this->load_includes();
         add_filter('woocommerce_payment_gateways', array($this, 'add_gateway'));
+
+        // Initialize polling system to ensure cron is scheduled
+        if (class_exists('KASPPAGA_Transaction_Polling')) {
+            new KASPPAGA_Transaction_Polling();
+        }
     }
 
     /**
@@ -445,18 +459,3 @@ function kasppaga_plugin_deactivate()
 {
     flush_rewrite_rules();
 }
-
-// debug if kaspa checkout does not show
-// add_action('wp_footer', function () {
-//     if (is_checkout()) {
-//         echo '<script>';
-//         echo 'console.log("Gateway class exists:", ' . (class_exists('WC_Kaspa_Clean_Gateway') ? 'true' : 'false') . ');';
-//         echo 'console.log("Files loaded successfully:", ' . (function_exists('kaspa_display_thankyou_page') ? 'true' : 'false') . ');';
-//         $kaspa_settings = get_option('woocommerce_kaspa_settings', array());
-//         echo 'console.log("Kaspa enabled:", "' . ($kaspa_settings['enabled'] ?? 'not set') . '");';
-//         echo 'console.log("Kaspa settings:", ' . json_encode($kaspa_settings) . ');';
-//         echo '</script>';
-//     }
-// });
-
-// WebSocket function removed - using polling system instead

@@ -43,6 +43,7 @@ class KASPPAGA_WC_Gateway extends WC_Payment_Gateway
         add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
         add_action('woocommerce_admin_order_data_after_billing_address', array($this, 'display_kaspa_payment_details'));
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
+        // AJAX handler for price testing moved to main plugin file
         // Balance checking moved to Kaspa plugin admin page
 
         add_action('template_redirect', array($this, 'handle_payment_page'));
@@ -83,6 +84,62 @@ class KASPPAGA_WC_Gateway extends WC_Payment_Gateway
                 'label' => 'Display Kaspa logo next to payment method',
                 'default' => 'yes'
             ),
+            'price_api_heading' => array(
+                'title' => __('Exchange rate source', 'kaspa-payments-gateway-woocommerce'),
+                'type' => 'title',
+                'description' => __('Choose the order of APIs used to fetch the KAS/USD rate. First successful response is used and cached for 5 minutes.', 'kaspa-payments-gateway-woocommerce'),
+            ),
+            'price_api_primary' => array(
+                'title' => __('1st choice', 'kaspa-payments-gateway-woocommerce'),
+                'type' => 'select',
+                'description' => __('Primary price source.', 'kaspa-payments-gateway-woocommerce'),
+                'default' => 'kaspa_api',
+                'options' => array(
+                    'kaspa_api'     => 'Kaspa API (api.kaspa.org)',
+                    'coingecko'     => 'CoinGecko',
+                    'cryptocompare' => 'CryptoCompare',
+                    'mexc'          => 'MEXC',
+                    'kucoin'        => 'KuCoin',
+                    'gateio'        => 'Gate.io',
+                    'htx'           => 'HTX (Huobi)',
+                    'coinex'        => 'CoinEx',
+                ),
+                'desc_tip' => true,
+            ),
+            'price_api_secondary' => array(
+                'title' => __('2nd choice', 'kaspa-payments-gateway-woocommerce'),
+                'type' => 'select',
+                'description' => __('Fallback if 1st fails.', 'kaspa-payments-gateway-woocommerce'),
+                'default' => 'coingecko',
+                'options' => array(
+                    'kaspa_api'     => 'Kaspa API (api.kaspa.org)',
+                    'coingecko'     => 'CoinGecko',
+                    'cryptocompare' => 'CryptoCompare',
+                    'mexc'          => 'MEXC',
+                    'kucoin'        => 'KuCoin',
+                    'gateio'        => 'Gate.io',
+                    'htx'           => 'HTX (Huobi)',
+                    'coinex'        => 'CoinEx',
+                ),
+                'desc_tip' => true,
+            ),
+            'price_api_tertiary' => array(
+                'title' => __('3rd choice', 'kaspa-payments-gateway-woocommerce'),
+                'type' => 'select',
+                'description' => __('Fallback if 1st and 2nd fail.', 'kaspa-payments-gateway-woocommerce'),
+                'default' => 'cryptocompare',
+                'options' => array(
+                    'kaspa_api'     => 'Kaspa API (api.kaspa.org)',
+                    'coingecko'     => 'CoinGecko',
+                    'cryptocompare' => 'CryptoCompare',
+                    'mexc'          => 'MEXC',
+                    'kucoin'        => 'KuCoin',
+                    'gateio'        => 'Gate.io',
+                    'htx'           => 'HTX (Huobi)',
+                    'coinex'        => 'CoinEx',
+                ),
+                'desc_tip' => true,
+            ),
         );
     }
 
@@ -109,8 +166,8 @@ class KASPPAGA_WC_Gateway extends WC_Payment_Gateway
 
     /**
      * Get current KAS rate with caching.
-     * Primary: CoinGecko. Fallback: CryptoCompare. If both fail, returns false (checkout shows error).
-     * Cache TTL is 5 minutes to stay within CoinGecko free tier (10,000 calls/month).
+     * Tries price sources in the order set in gateway settings (default: Kaspa API, CoinGecko, CryptoCompare).
+     * Cache TTL is 5 minutes (CoinGecko free tier 10k calls/month when used).
      */
     public function get_kas_rate()
     {
@@ -119,42 +176,119 @@ class KASPPAGA_WC_Gateway extends WC_Payment_Gateway
             return $cached_rate;
         }
 
-        // Primary: CoinGecko
-        $response = wp_remote_get('https://api.coingecko.com/api/v3/simple/price?ids=kaspa&vs_currencies=usd', array(
-            'timeout' => 10
-        ));
+        $order = array(
+            $this->get_option('price_api_primary', 'kaspa_api'),
+            $this->get_option('price_api_secondary', 'coingecko'),
+            $this->get_option('price_api_tertiary', 'cryptocompare'),
+        );
+        $order = array_unique(array_filter($order));
+        if (empty($order)) {
+            $order = array('kaspa_api', 'coingecko', 'cryptocompare');
+        }
 
-        if (!is_wp_error($response)) {
-            $body = wp_remote_retrieve_body($response);
-            $data = json_decode($body, true);
-            if (isset($data['kaspa']['usd'])) {
-                $rate = floatval($data['kaspa']['usd']);
-                set_transient('kaspa_rate_cache', $rate, 300); // 5 min: within CoinGecko free tier 10k calls/month
+        foreach ($order as $source) {
+            $rate = $this->fetch_rate_from_source($source);
+            if ($rate !== false && $rate > 0) {
+                set_transient('kaspa_rate_cache', $rate, 300); // 5 min
+                update_option('kaspa_rate_last_updated', time()); // Store last success timestamp
                 return $rate;
             }
-        } else {
-            error_log('Kaspa rate fetch (CoinGecko): ' . $response->get_error_message());
-        }
-
-        // Fallback: CryptoCompare (no API key required for price endpoint)
-        $response = wp_remote_get('https://min-api.cryptocompare.com/data/price?fsym=KAS&tsyms=USD', array(
-            'timeout' => 10
-        ));
-
-        if (is_wp_error($response)) {
-            error_log('Kaspa rate fetch (CryptoCompare): ' . $response->get_error_message());
-            return false;
-        }
-
-        $body = wp_remote_retrieve_body($response);
-        $data = json_decode($body, true);
-        if (isset($data['USD'])) {
-            $rate = floatval($data['USD']);
-            set_transient('kaspa_rate_cache', $rate, 300); // 5 min: within CoinGecko free tier 10k calls/month
-            return $rate;
         }
 
         return false;
+    }
+
+    /**
+     * Fetch KAS/USD rate from a single source. Returns rate or false.
+     * All sources are public APIs (no API key required). Exchange tickers return KAS/USDT (~USD).
+     *
+     * @param string $source One of: kaspa_api, coingecko, cryptocompare, mexc, kucoin, gateio, htx, coinex.
+     * @return float|false
+     */
+    private function fetch_rate_from_source($source)
+    {
+        switch ($source) {
+            case 'kaspa_api':
+                $response = wp_remote_get('https://api.kaspa.org/info/price', array('timeout' => 10));
+                if (is_wp_error($response)) {
+                    error_log('Kaspa rate fetch (api.kaspa.org): ' . $response->get_error_message());
+                    return false;
+                }
+                $data = json_decode(wp_remote_retrieve_body($response), true);
+                return isset($data['price']) ? floatval($data['price']) : false;
+
+            case 'coingecko':
+                $response = wp_remote_get('https://api.coingecko.com/api/v3/simple/price?ids=kaspa&vs_currencies=usd', array('timeout' => 10));
+                if (is_wp_error($response)) {
+                    error_log('Kaspa rate fetch (CoinGecko): ' . $response->get_error_message());
+                    return false;
+                }
+                $data = json_decode(wp_remote_retrieve_body($response), true);
+                return isset($data['kaspa']['usd']) ? floatval($data['kaspa']['usd']) : false;
+
+            case 'cryptocompare':
+                $response = wp_remote_get('https://min-api.cryptocompare.com/data/price?fsym=KAS&tsyms=USD', array('timeout' => 10));
+                if (is_wp_error($response)) {
+                    error_log('Kaspa rate fetch (CryptoCompare): ' . $response->get_error_message());
+                    return false;
+                }
+                $data = json_decode(wp_remote_retrieve_body($response), true);
+                return isset($data['USD']) ? floatval($data['USD']) : false;
+
+            case 'htx':
+                $response = wp_remote_get('https://api.huobi.pro/market/detail/merged?symbol=kasusdt', array('timeout' => 10));
+                if (is_wp_error($response)) {
+                    error_log('Kaspa rate fetch (HTX): ' . $response->get_error_message());
+                    return false;
+                }
+                $data = json_decode(wp_remote_retrieve_body($response), true);
+                if (isset($data['tick']['close'])) {
+                    return floatval($data['tick']['close']);
+                }
+                return false;
+
+            case 'coinex':
+                $response = wp_remote_get('https://api.coinex.com/v2/spot/ticker?market=KASUSDT', array('timeout' => 10));
+                if (is_wp_error($response)) {
+                    error_log('Kaspa rate fetch (CoinEx): ' . $response->get_error_message());
+                    return false;
+                }
+                $data = json_decode(wp_remote_retrieve_body($response), true);
+                if (isset($data['data'][0]['last'])) {
+                    return floatval($data['data'][0]['last']);
+                }
+                return false;
+
+            case 'mexc':
+                $response = wp_remote_get('https://api.mexc.com/api/v3/ticker/price?symbol=KASUSDT', array('timeout' => 10));
+                if (is_wp_error($response)) {
+                    error_log('Kaspa rate fetch (MEXC): ' . $response->get_error_message());
+                    return false;
+                }
+                $data = json_decode(wp_remote_retrieve_body($response), true);
+                return isset($data['price']) ? floatval($data['price']) : false;
+
+            case 'kucoin':
+                $response = wp_remote_get('https://api.kucoin.com/api/v1/market/orderbook/level1?symbol=KAS-USDT', array('timeout' => 10));
+                if (is_wp_error($response)) {
+                    error_log('Kaspa rate fetch (KuCoin): ' . $response->get_error_message());
+                    return false;
+                }
+                $data = json_decode(wp_remote_retrieve_body($response), true);
+                return isset($data['data']['price']) ? floatval($data['data']['price']) : false;
+
+            case 'gateio':
+                $response = wp_remote_get('https://api.gateio.ws/api/v4/spot/tickers?currency_pair=KAS_USDT', array('timeout' => 10));
+                if (is_wp_error($response)) {
+                    error_log('Kaspa rate fetch (Gate.io): ' . $response->get_error_message());
+                    return false;
+                }
+                $data = json_decode(wp_remote_retrieve_body($response), true);
+                return (is_array($data) && isset($data[0]['last'])) ? floatval($data[0]['last']) : false;
+
+            default:
+                return false;
+        }
     }
 
     /**

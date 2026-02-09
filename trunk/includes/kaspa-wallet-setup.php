@@ -506,10 +506,19 @@ class KASPPAGA_Wallet_Setup
                             style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; display: none;">
                             <h3>💰 Wallet Balance</h3>
                             <div id="balance-loading" style="color: #666;">
-                                <small>🔄 Loading balance...</small>
+                                <div style="text-align: center; padding: 20px;">
+                                    <div style="width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #70D0F0; border-radius: 50%; margin: 0 auto 10px; animation: spin 1s linear infinite;"></div>
+                                    <small>🔄 Loading balance...</small>
+                                </div>
                             </div>
                             <div id="balance-content" style="display: none;"></div>
                         </div>
+                        <style>
+                            @keyframes spin {
+                                0% { transform: rotate(0deg); }
+                                100% { transform: rotate(360deg); }
+                            }
+                        </style>
 
                         <div class="kaspa-wallet-actions">
                             <h3>⚙️ Actions</h3>
@@ -553,16 +562,35 @@ class KASPPAGA_Wallet_Setup
 
         // Build inline script
         $wallet_setup_script = "document.addEventListener('DOMContentLoaded', function () {
-            setTimeout(function () {
-                autoCheckWalletBalance();
-            }, 500);
+            // Show balance section immediately if hash is present and start fetching
+            if (window.location.hash === '#kaspa-auto-balance') {
+                const balanceDisplay = document.getElementById('kaspa-auto-balance');
+                if (balanceDisplay) {
+                    balanceDisplay.style.display = 'block';
+                    balanceDisplay.style.border = '2px solid #2271b1'; // Highlight
+                    setTimeout(() => { balanceDisplay.style.transition = 'border 1s'; balanceDisplay.style.border = '1px solid #f0f0f0'; }, 2000);
+                    // Start fetching immediately when navigated from Balance button
+                    autoCheckWalletBalance();
+                }
+            } else {
+                // Small delay only if NOT coming from balance button click
+                setTimeout(function () {
+                    autoCheckWalletBalance();
+                }, 300);
+            }
         });
-        function autoCheckWalletBalance() {
+        function autoCheckWalletBalance(forceRefresh = false) {
             const balanceDisplay = document.getElementById('kaspa-auto-balance');
             const balanceLoading = document.getElementById('balance-loading');
             const balanceContent = document.getElementById('balance-content');
             if (!balanceDisplay) return;
             balanceDisplay.style.display = 'block';
+            
+            // Show loading state only if no content is displayed yet
+            if (balanceContent.style.display === 'none') {
+                balanceLoading.style.display = 'block';
+            }
+            
             const xhr = new XMLHttpRequest();
             xhr.open('POST', '" . esc_url($ajax_url) . "', true);
             xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
@@ -577,8 +605,16 @@ class KASPPAGA_Wallet_Setup
                                 const usdValue = response.data.total_usd_value ? '$' + parseFloat(response.data.total_usd_value).toFixed(2) : 'N/A';
                                 const addressCount = response.data.address_count || 0;
                                 const kasRate = response.data.kas_rate;
-                                balanceContent.innerHTML = '<div style=\"text-align: center;\"><div style=\"font-size: 32px; font-weight: bold; color: #2271b1; margin: 10px 0;\">' + totalBalance + ' KAS</div><div style=\"font-size: 18px; color: #666; margin-bottom: 15px;\">' + usdValue + (kasRate ? '<small style=\"display: block; margin-top: 5px;\">Rate: $' + parseFloat(kasRate).toFixed(6) + '/KAS</small>' : '') + '</div><div style=\"font-size: 12px; color: #999; margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd;\"><small>💰 Checking ' + addressCount + ' address' + (addressCount !== 1 ? 'es' : '') + ' (main wallet + order addresses)</small><br><small>Last updated: ' + new Date().toLocaleString() + '</small></div></div>';
+                                const isCached = response.data.cached || false;
+                                const cacheIndicator = isCached ? '<small style=\"color: #949494; font-size: 10px;\"> (Cached - refreshing in background...)</small>' : '';
+                                
+                                balanceContent.innerHTML = '<div style=\"text-align: center;\"><div style=\"font-size: 32px; font-weight: bold; color: #2271b1; margin: 10px 0;\">' + totalBalance + ' KAS</div><div style=\"font-size: 18px; color: #666; margin-bottom: 15px;\">' + usdValue + (kasRate ? '<small style=\"display: block; margin-top: 5px;\">Rate: $' + parseFloat(kasRate).toFixed(6) + '/KAS</small>' : '') + '</div><div style=\"font-size: 12px; color: #999; margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd;\"><small>💰 Consolidated across ' + addressCount + ' address' + (addressCount !== 1 ? 'es' : '') + '</small><br><small>Last updated: ' + new Date(response.data.timestamp * 1000).toLocaleString() + cacheIndicator + '</small></div></div>';
                                 balanceContent.style.display = 'block';
+                                
+                                // If this was cached data, trigger a background refresh
+                                if (isCached && !forceRefresh) {
+                                    setTimeout(() => autoCheckWalletBalance(true), 100);
+                                }
                             } else {
                                 balanceContent.innerHTML = '<div style=\"text-align: center; color: #666;\"><small>ℹ️ ' + (response.data || 'Unable to load balance. Addresses will be checked when orders are created.') + '</small></div>';
                                 balanceContent.style.display = 'block';
@@ -593,7 +629,7 @@ class KASPPAGA_Wallet_Setup
                     }
                 }
             };
-            const data = 'action=kasppaga_get_consolidated_balance&nonce=" . esc_js($consolidated_balance_nonce) . "';
+            const data = 'action=kasppaga_get_consolidated_balance&nonce=" . esc_js($consolidated_balance_nonce) . "&force_refresh=' + (forceRefresh ? 'true' : 'false') + '';
             xhr.send(data);
         }
         function copyAddress(address) {
@@ -601,7 +637,6 @@ class KASPPAGA_Wallet_Setup
                 alert('❌ No address provided to copy');
                 return;
             }
-            console.log('📋 Copying address:', address);
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(address).then(() => {
                     alert('✅ Address copied to clipboard!');
@@ -673,7 +708,7 @@ class KASPPAGA_Wallet_Setup
                                 const addressCount = response.data.address_count || 0;
                                 const kasRate = response.data.kas_rate;
                                 if (balanceContent) {
-                                    balanceContent.innerHTML = '<div style=\"text-align: center;\"><div style=\"font-size: 32px; font-weight: bold; color: #2271b1; margin: 10px 0;\">' + totalBalance + ' KAS</div><div style=\"font-size: 18px; color: #666; margin-bottom: 15px;\">' + usdValue + (kasRate ? '<small style=\"display: block; margin-top: 5px;\">Rate: $' + parseFloat(kasRate).toFixed(6) + '/KAS</small>' : '') + '</div><div style=\"font-size: 12px; color: #999; margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd;\"><small>💰 Checking ' + addressCount + ' order address' + (addressCount !== 1 ? 'es' : '') + '</small><br><small style=\"color: #d63638; font-style: italic;\">⚠️ Only shows balance from plugin-generated order addresses. Funds sent manually to other addresses won\\'t appear here.</small><br><small>Last updated: ' + new Date().toLocaleString() + '</small></div></div>';
+                                    balanceContent.innerHTML = '<div style=\"text-align: center;\"><div style=\"font-size: 32px; font-weight: bold; color: #2271b1; margin: 10px 0;\">' + totalBalance + ' KAS</div><div style=\"font-size: 18px; color: #666; margin-bottom: 15px;\">' + usdValue + (kasRate ? '<small style=\"display: block; margin-top: 5px;\">Rate: $' + parseFloat(kasRate).toFixed(6) + '/KAS</small>' : '') + '</div><div style=\"font-size: 12px; color: #999; margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd;\"><small>💰 Consolidated across ' + addressCount + ' address' + (addressCount !== 1 ? 'es' : '') + '</small><br><small>Last updated: ' + new Date(response.data.timestamp * 1000).toLocaleString() + '</small></div></div>';
                                     balanceContent.style.display = 'block';
                                 }
                             } else {
@@ -692,7 +727,7 @@ class KASPPAGA_Wallet_Setup
                     }
                 }
             };
-            const data = 'action=kasppaga_get_consolidated_balance&nonce=" . esc_js($consolidated_balance_nonce) . "';
+            const data = 'action=kasppaga_get_consolidated_balance&nonce=" . esc_js($consolidated_balance_nonce) . "&force_refresh=true';
             xhr.send(data);
         }
         function showKPUBInfo() {
@@ -895,6 +930,22 @@ function kasppaga_get_consolidated_balance_ajax()
     }
 
     try {
+        // Check if force refresh is requested
+        $force_refresh = isset($_POST['force_refresh']) && $_POST['force_refresh'] === 'true';
+
+        // Try to get cached balance first (60 second cache)
+        $cache_key = 'kasppaga_consolidated_balance_cache';
+        $cached_data = get_transient($cache_key);
+
+        if (!$force_refresh && $cached_data !== false) {
+            // Return cached data with indicator
+            $cached_data['cached'] = true;
+            $cached_data['cache_age'] = time() - $cached_data['timestamp'];
+            wp_send_json_success($cached_data);
+            return;
+        }
+
+        // Perform fresh balance check
         $polling = new KASPPAGA_Transaction_Polling();
         $total_balance = 0;
         $addresses_checked = array();
@@ -945,15 +996,21 @@ function kasppaga_get_consolidated_balance_ajax()
         $kas_rate = $gateway->get_kas_rate();
         $total_usd_value = $kas_rate ? $total_balance * $kas_rate : null;
 
-        wp_send_json_success(array(
+        $balance_data = array(
             'total_balance' => $total_balance,
             'total_usd_value' => $total_usd_value,
             'kas_rate' => $kas_rate,
             'address_count' => $address_count,
             'addresses_checked' => $addresses_checked,
             'note' => 'Balance shown is only from plugin-generated order addresses. Funds sent manually to other addresses in your KPUB wallet will not appear here.',
-            'timestamp' => time()
-        ));
+            'timestamp' => time(),
+            'cached' => false
+        );
+
+        // Cache for 60 seconds
+        set_transient($cache_key, $balance_data, 60);
+
+        wp_send_json_success($balance_data);
 
     } catch (Exception $e) {
         error_log('Kaspa consolidated balance error: ' . $e->getMessage());

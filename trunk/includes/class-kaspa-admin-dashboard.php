@@ -45,6 +45,16 @@ class KASPPAGA_Admin_Dashboard
             'kaspa-analytics',
             array($this, 'render_analytics_page')
         );
+
+        // Sub-menu: Help & FAQ
+        add_submenu_page(
+            'kaspa-payments-gateway',
+            'Help & FAQ',
+            'Help & FAQ',
+            'manage_woocommerce',
+            'kaspa-help',
+            array($this, 'render_help_page')
+        );
     }
 
     /**
@@ -53,7 +63,7 @@ class KASPPAGA_Admin_Dashboard
     public function maybe_show_review_notice()
     {
         $screen = function_exists('get_current_screen') ? get_current_screen() : null;
-        if (!$screen || !in_array($screen->id, array('toplevel_page_kaspa-payments-gateway', 'kaspa-payments-gateway_page_kaspa-analytics', 'kaspa-payments-gateway_page_kaspa-wallet-setup'), true)) {
+        if (!$screen || !in_array($screen->id, array('toplevel_page_kaspa-payments-gateway', 'kaspa-payments-gateway_page_kaspa-analytics', 'kaspa-payments-gateway_page_kaspa-wallet-setup', 'kaspa-payments-gateway_page_kaspa-help'), true)) {
             return;
         }
         if (!current_user_can('manage_woocommerce')) {
@@ -121,100 +131,160 @@ class KASPPAGA_Admin_Dashboard
         $stats = $this->get_payment_stats();
         $recent_orders = $this->get_recent_kaspa_orders(5);
         ?>
-        <div class="wrap kaspa-admin-dashboard">
-            <h1>💎 Kaspa Payments Gateway Dashboard</h1>
+        <div class="wrap kaspa-admin-dashboard" style="max-width: 1200px; margin: 0 auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h1 style="margin: 0; font-size: 23px;">Kaspa Gateway</h1>
+                <a href="<?php echo esc_url(admin_url('admin.php?page=kaspa-analytics')); ?>" class="button" style="background: #70D0F0; color: #fff; border: none;">Analytics</a>
+            </div>
 
             <!-- Stats Cards -->
-            <div class="kaspa-stats-grid">
-                <div class="kaspa-stat-card">
-                    <div class="kaspa-stat-icon">💰</div>
-                    <div class="kaspa-stat-content">
-                        <h3><?php echo esc_html($stats['total_revenue_kas']); ?> KAS</h3>
-                        <p>Total Revenue</p>
-                        <small>$<?php echo number_format($stats['total_revenue_usd'], 2); ?> USD</small>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 20px;">
+                <div style="background: linear-gradient(135deg, #ffffff 0%, #f0f9fc 100%); padding: 20px; border-radius: 8px; border-left: 4px solid #49a8d4; box-shadow: 0 2px 8px rgba(0,0,0,0.06); position: relative; overflow: hidden;">
+                    <div style="position: absolute; right: -10px; top: -10px; font-size: 80px; opacity: 0.06;">
+                        <span class="dashicons dashicons-chart-line"></span>
+                    </div>
+                    <div style="position: relative; z-index: 1;">
+                        <div style="font-size: 28px; font-weight: 700; margin-bottom: 4px; color: #1d2327;"><?php echo esc_html($stats['total_revenue_kas']); ?> KAS</div>
+                        <div style="font-size: 14px; color: #646970; margin-bottom: 2px;">Total Sales</div>
+                        <div style="font-size: 12px; color: #949494;">$<?php echo number_format($stats['total_revenue_usd'], 2); ?> USD</div>
                     </div>
                 </div>
 
-                <div class="kaspa-stat-card">
-                    <div class="kaspa-stat-icon">📦</div>
-                    <div class="kaspa-stat-content">
-                        <h3><?php echo esc_html($stats['total_orders']); ?></h3>
-                        <p>Total Orders</p>
-                        <small><?php echo esc_html($stats['orders_this_month']); ?> this month</small>
+                <div style="background: linear-gradient(135deg, #ffffff 0%, #f0f8ff 100%); padding: 20px; border-radius: 8px; border-left: 4px solid #70D0F0; box-shadow: 0 2px 8px rgba(0,0,0,0.06); position: relative; overflow: hidden;">
+                    <div style="position: absolute; right: -10px; top: -10px; font-size: 80px; opacity: 0.06;">
+                        <span class="dashicons dashicons-cart"></span>
+                    </div>
+                    <div style="position: relative; z-index: 1;">
+                        <div style="font-size: 28px; font-weight: 700; margin-bottom: 4px; color: #1d2327;"><?php echo esc_html($stats['total_orders']); ?></div>
+                        <div style="font-size: 14px; color: #646970; margin-bottom: 2px;">Total Orders</div>
+                        <div style="font-size: 12px; color: #949494;"><?php echo esc_html($stats['orders_this_month']); ?> this month</div>
                     </div>
                 </div>
 
-                <div class="kaspa-stat-card">
-                    <div class="kaspa-stat-icon">⚡</div>
-                    <div class="kaspa-stat-content">
-                        <h3><?php echo esc_html($stats['success_rate']); ?>%</h3>
-                        <p>Success Rate</p>
-                        <small><?php echo esc_html($stats['total_attempts']); ?> attempts</small>
+                <div style="background: linear-gradient(135deg, #ffffff 0%, #f0f7ff 100%); padding: 20px; border-radius: 8px; border-left: 4px solid #2c8fc1; box-shadow: 0 2px 8px rgba(0,0,0,0.06); position: relative; overflow: hidden;">
+                    <div style="position: absolute; right: -10px; top: -10px; font-size: 80px; opacity: 0.06;">
+                        <span class="dashicons dashicons-yes-alt"></span>
+                    </div>
+                    <div style="position: relative; z-index: 1;">
+                        <div style="font-size: 28px; font-weight: 700; margin-bottom: 4px; color: #1d2327;"><?php echo esc_html($stats['success_rate']); ?>%</div>
+                        <div style="font-size: 14px; color: #646970; margin-bottom: 2px;">Success Rate</div>
+                        <div style="font-size: 12px; color: #949494;"><?php echo esc_html($stats['total_attempts']); ?> attempts</div>
                     </div>
                 </div>
             </div>
 
-            <!-- Quick Actions -->
-            <div class="kaspa-quick-actions" style="margin: 20px 0; padding: 15px; background: #fff; border: 1px solid #ddd; border-radius: 8px;">
-                <h2 style="margin-top: 0; font-size: 16px;">⚡ Quick Actions</h2>
-                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                    <a href="<?php echo esc_url(admin_url('admin.php?page=kaspa-wallet-setup')); ?>" class="button">
-                        🔑 Wallet Setup
-                    </a>
-                    <a href="<?php echo esc_url(admin_url('admin.php?page=wc-settings&tab=checkout&section=kaspa')); ?>" class="button button-primary">
-                        ⚙️ Payment Settings
-                    </a>
-                    <a href="<?php echo esc_url(admin_url('edit.php?post_type=shop_order&payment_method=kaspa')); ?>" class="button">
-                        📦 View All Orders
-                    </a>
+            <!-- Quick Actions & System Health -->
+            <?php 
+            $health = $this->get_system_health_data(); 
+            ?>
+            <!-- System Status Bar -->
+            <div style="margin-bottom: 20px; padding: 16px 20px; background: linear-gradient(to right, #ffffff, #f8f9fa); border: 1px solid #e0e0e0; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+                    <!-- Left side: System Status -->
+                    <div style="display: flex; gap: 24px; flex-wrap: wrap; align-items: center;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span class="dashicons dashicons-admin-network" style="color: #70D0F0; font-size: 18px;"></span>
+                            <div>
+                                <div style="font-size: 11px; color: #757575; line-height: 1;">System Status</div>
+                                <div style="font-size: 13px; font-weight: 600; color: #1d2327; margin-top: 2px;">
+                                    Wallet 
+                                    <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: <?php echo $health['wallet_configured'] ? '#46b450' : '#dc3232'; ?>; margin: 0 8px;"></span>
+                                    Price API
+                                    <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: <?php echo $health['rate_ok'] ? '#46b450' : '#dc3232'; ?>; margin: 0 8px;" title="<?php 
+                                        $last_crawl = $health['last_rate_update'] ? human_time_diff($health['last_rate_update'], time()) . ' ago' : 'Never';
+                                        echo esc_attr('Cached 5min. Last: ' . $last_crawl); 
+                                    ?>"></span>
+                                    Monitoring
+                                    <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: <?php echo $health['polling_active'] ? '#46b450' : '#dc3232'; ?>; margin-left: 8px;"></span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <?php if ($health['rate_ok']): ?>
+                        <div style="display: flex; align-items: center; gap: 8px; padding-left: 24px; border-left: 1px solid #e0e0e0;">
+                            <span class="dashicons dashicons-money-alt" style="color: #949494; font-size: 16px;"></span>
+                            <div>
+                                <div style="font-size: 11px; color: #757575; line-height: 1;">Current Rate</div>
+                                <div style="font-size: 13px; font-weight: 600; color: #1d2327; margin-top: 2px;">$<?php echo esc_html(number_format((float) $health['rate_value'], 5)); ?></div>
+                            </div>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+                    
+                    <!-- Right side: Quick Actions -->
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <a href="<?php echo esc_url(admin_url('admin.php?page=kaspa-wallet-setup')); ?>" class="button button-small" style="font-size: 12px; padding: 4px 12px;">
+                            <span class="dashicons dashicons-admin-network" style="font-size: 14px; vertical-align: middle; margin-right: 4px;"></span>
+                            <?php echo $health['wallet_configured'] ? 'Wallet' : 'Setup Wallet'; ?>
+                        </a>
+                        <?php if ($health['wallet_configured']): ?>
+                            <a href="<?php echo esc_url(admin_url('admin.php?page=kaspa-wallet-setup')); ?>#kaspa-auto-balance" class="button button-small kaspa-prefetch-balance" style="font-size: 12px; padding: 4px 12px;">
+                                <span class="dashicons dashicons-chart-bar" style="font-size: 14px; vertical-align: middle; margin-right: 4px;"></span>
+                                Balance
+                            </a>
+                        <?php endif; ?>
+                        <a href="<?php echo esc_url(admin_url('admin.php?page=wc-settings&tab=checkout&section=kaspa')); ?>" class="button button-small" style="font-size: 12px; padding: 4px 12px;">
+                            <span class="dashicons dashicons-admin-settings" style="font-size: 14px; vertical-align: middle; margin-right: 4px;"></span>
+                            Settings
+                        </a>
+                        <a href="<?php echo esc_url(admin_url('edit.php?post_type=shop_order&payment_method=kaspa')); ?>" class="button button-small" style="font-size: 12px; padding: 4px 12px;">
+                            <span class="dashicons dashicons-list-view" style="font-size: 14px; vertical-align: middle; margin-right: 4px;"></span>
+                            Orders
+                        </a>
+                    </div>
                 </div>
             </div>
-
-            <!-- Wallet Balance Section -->
-            <?php $this->render_wallet_balance_section(); ?>
 
             <!-- Recent Orders -->
-            <div class="kaspa-recent-orders">
-                <h2>📋 Recent Kaspa Orders</h2>
-                <div class="kaspa-orders-table">
-                    <table class="wp-list-table widefat fixed striped">
+            <div style="background: #fff; padding: 18px; border: 1px solid #e0e0e0; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+                <h2 style="margin: 0 0 14px 0; font-size: 15px; font-weight: 600; color: #1d2327;">Recent Orders</h2>
+                <div style="overflow-x: auto;">
+                    <table class="wp-list-table widefat fixed striped" style="font-size: 13px;">
                         <thead>
                             <tr>
-                                <th>Order</th>
-                                <th>Customer</th>
-                                <th>Amount</th>
-                                <th>Status</th>
-                                <th>Date</th>
-                                <th>Actions</th>
+                                <th style="padding: 8px;">Order</th>
+                                <th style="padding: 8px;">Customer</th>
+                                <th style="padding: 8px;">Amount</th>
+                                <th style="padding: 8px;">Status</th>
+                                <th style="padding: 8px;">Date</th>
+                                <th style="padding: 8px;">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php if (!empty($recent_orders)): ?>
                                 <?php foreach ($recent_orders as $order): ?>
                                     <tr>
-                                        <td><strong>#<?php echo esc_html($order['id']); ?></strong></td>
-                                        <td><?php echo esc_html($order['customer']); ?></td>
-                                        <td>
+                                        <td style="padding: 8px;"><strong>#<?php echo esc_html($order['id']); ?></strong></td>
+                                        <td style="padding: 8px;"><?php echo esc_html($order['customer']); ?></td>
+                                        <td style="padding: 8px;">
                                             <strong><?php echo esc_html($order['kas_amount']); ?> KAS</strong><br>
-                                            <small>$<?php echo esc_html($order['usd_amount']); ?></small>
+                                            <small style="color: #757575;">$<?php echo esc_html($order['usd_amount']); ?></small>
                                         </td>
-                                        <td>
-                                            <span class="kaspa-status-badge <?php echo esc_attr($order['status']); ?>">
+                                        <td style="padding: 8px;">
+                                            <span style="display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; <?php 
+                                                $status_colors = array(
+                                                    'completed' => 'background: #d4edda; color: #155724;',
+                                                    'processing' => 'background: #fff3cd; color: #856404;',
+                                                    'pending' => 'background: #e7f3ff; color: #004085;',
+                                                    'failed' => 'background: #f8d7da; color: #721c24;',
+                                                    'cancelled' => 'background: #f8d7da; color: #721c24;'
+                                                );
+                                                echo isset($status_colors[$order['status']]) ? $status_colors[$order['status']] : 'background: #f0f0f0; color: #666;';
+                                            ?>">
                                                 <?php echo esc_html(ucfirst($order['status'])); ?>
                                             </span>
                                         </td>
-                                        <td><?php echo esc_html($order['date']); ?></td>
-                                        <td>
-                                            <a href="<?php echo esc_url($order['edit_url']); ?>" class="button button-small">View</a>
+                                        <td style="padding: 8px; font-size: 12px; color: #666;"><?php echo esc_html($order['date']); ?></td>
+                                        <td style="padding: 8px;">
+                                            <a href="<?php echo esc_url($order['edit_url']); ?>" class="button button-small" style="font-size: 11px; padding: 4px 10px;">View</a>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
                             <?php else: ?>
                                 <tr>
-                                    <td colspan="6" style="text-align: center; padding: 40px; color: #666;">
-                                        <div style="font-size: 32px; margin-bottom: 16px;">💎</div>
-                                        <h4>No Kaspa Orders Yet</h4>
-                                        <p>Once you start receiving Kaspa payments, they'll appear here.</p>
+                                    <td colspan="6" style="text-align: center; padding: 30px; color: #757575;">
+                                        <div style="font-weight: 600; margin-bottom: 4px;">No Orders Yet</div>
+                                        <div style="font-size: 12px;">Orders will appear here once you receive Kaspa payments</div>
                                     </td>
                                 </tr>
                             <?php endif; ?>
@@ -223,22 +293,31 @@ class KASPPAGA_Admin_Dashboard
                 </div>
 
                 <?php if (!empty($recent_orders)): ?>
-                    <p><a href="<?php echo esc_url(admin_url('edit.php?post_type=shop_order&payment_method=kaspa')); ?>"
-                            class="button">View
-                            All Kaspa Orders →</a></p>
+                    <div style="margin-top: 14px; text-align: right;">
+                        <a href="<?php echo esc_url(admin_url('edit.php?post_type=shop_order&payment_method=kaspa')); ?>" class="button button-small" style="font-size: 12px;">View All →</a>
+                    </div>
                 <?php endif; ?>
             </div>
         </div>
         <?php
-        // Add inline script for stats refresh
+        // Add inline script for stats refresh and balance prefetch
+        $consolidated_balance_nonce = wp_create_nonce('kasppaga_consolidated_balance');
         $inline_script = "jQuery(document).ready(function ($) {
+            // Stats refresh
             setInterval(function () {
-                $.post(ajaxurl, { action: 'kasppaga_get_stats' }, function (response) {
-                    if (response.success) {
-                        console.log('Stats refreshed');
-                    }
-                });
+                $.post(ajaxurl, { action: 'kasppaga_get_stats' });
             }, 30000);
+            
+            // Prefetch balance when Balance button is clicked
+            $('.kaspa-prefetch-balance').on('click', function(e) {
+                // Start fetching balance data immediately before page navigation
+                $.post(ajaxurl, {
+                    action: 'kasppaga_get_consolidated_balance',
+                    nonce: '" . esc_js($consolidated_balance_nonce) . "',
+                    force_refresh: 'false'
+                });
+                // Let the navigation continue normally
+            });
         });";
         wp_add_inline_script('kaspa-admin-script', $inline_script);
     }
@@ -250,39 +329,44 @@ class KASPPAGA_Admin_Dashboard
     {
         $analytics = $this->get_analytics_data();
         ?>
-        <div class="wrap kaspa-analytics">
-            <h1>📊 Kaspa Payment Analytics</h1>
+        <div class="wrap kaspa-analytics" style="max-width: 1200px; margin: 0 auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h1 style="margin: 0; font-size: 23px;">Analytics</h1>
+                <a href="<?php echo esc_url(admin_url('admin.php?page=kaspa-payments-gateway')); ?>" class="button">
+                    ← Dashboard
+                </a>
+            </div>
 
             <!-- Key Metrics -->
-            <div class="kaspa-analytics-grid">
-                <div class="kaspa-analytics-card">
-                    <h3>⚡ Payment Performance</h3>
-                    <div class="kaspa-metrics-list">
-                        <div class="kaspa-metric">
-                            <span class="kaspa-metric-label">Average Order Value:</span>
-                            <span class="kaspa-metric-value"><?php echo esc_html($analytics['avg_order_value']); ?> KAS</span>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-bottom: 20px;">
+                <div style="background: #fff; padding: 18px; border: 1px solid #e0e0e0; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+                    <h3 style="margin: 0 0 12px 0; font-size: 13px; font-weight: 600; color: #757575; text-transform: uppercase; letter-spacing: 0.5px;">Payment Performance</h3>
+                    <div>
+                        <div style="margin: 10px 0;">
+                            <div style="font-size: 11px; color: #757575; margin-bottom: 3px;">Average Order Value</div>
+                            <div style="font-size: 20px; font-weight: 700; color: #1d2327;"><?php echo esc_html($analytics['avg_order_value']); ?> KAS</div>
                         </div>
-                        <div class="kaspa-metric">
-                            <span class="kaspa-metric-label">Success Rate:</span>
-                            <span class="kaspa-metric-value"><?php echo esc_html($analytics['success_rate']); ?>%</span>
+                        <div style="margin: 10px 0;">
+                            <div style="font-size: 11px; color: #757575; margin-bottom: 3px;">Success Rate</div>
+                            <div style="font-size: 20px; font-weight: 700; color: #1d2327;"><?php echo esc_html($analytics['success_rate']); ?>%</div>
                         </div>
-                        <div class="kaspa-metric">
-                            <span class="kaspa-metric-label">Total Volume:</span>
-                            <span class="kaspa-metric-value"><?php echo esc_html($analytics['total_volume']); ?> KAS</span>
+                        <div style="margin: 10px 0;">
+                            <div style="font-size: 11px; color: #757575; margin-bottom: 3px;">Total Volume</div>
+                            <div style="font-size: 20px; font-weight: 700; color: #1d2327;"><?php echo esc_html($analytics['total_volume']); ?> KAS</div>
                         </div>
                     </div>
                 </div>
 
-                <div class="kaspa-analytics-card">
-                    <h3>👥 Customer Insights</h3>
-                    <div class="kaspa-metrics-list">
-                        <div class="kaspa-metric">
-                            <span class="kaspa-metric-label">Unique Customers:</span>
-                            <span class="kaspa-metric-value"><?php echo esc_html($analytics['unique_customers']); ?></span>
+                <div style="background: #fff; padding: 18px; border: 1px solid #e0e0e0; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+                    <h3 style="margin: 0 0 12px 0; font-size: 13px; font-weight: 600; color: #757575; text-transform: uppercase; letter-spacing: 0.5px;">Customer Insights</h3>
+                    <div>
+                        <div style="margin: 10px 0;">
+                            <div style="font-size: 11px; color: #757575; margin-bottom: 3px;">Unique Customers</div>
+                            <div style="font-size: 20px; font-weight: 700; color: #1d2327;"><?php echo esc_html($analytics['unique_customers']); ?></div>
                         </div>
-                        <div class="kaspa-metric">
-                            <span class="kaspa-metric-label">Repeat Customers:</span>
-                            <span class="kaspa-metric-value"><?php echo esc_html($analytics['repeat_customers']); ?>%</span>
+                        <div style="margin: 10px 0;">
+                            <div style="font-size: 11px; color: #757575; margin-bottom: 3px;">Repeat Customers</div>
+                            <div style="font-size: 20px; font-weight: 700; color: #1d2327;"><?php echo esc_html($analytics['repeat_customers']); ?>%</div>
                         </div>
                     </div>
                 </div>
@@ -290,35 +374,388 @@ class KASPPAGA_Admin_Dashboard
 
             <!-- Recent Trends -->
             <?php if (!empty($analytics['daily_trends'])): ?>
-                <h3>📈 Recent Activity (Last 7 Days)</h3>
-                <table class="wp-list-table widefat fixed striped">
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Orders</th>
-                            <th>Revenue (KAS)</th>
-                            <th>Revenue (USD)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach (array_slice($analytics['daily_trends'], -7) as $day): ?>
+                <div style="background: #fff; padding: 18px; border: 1px solid #e0e0e0; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+                    <h3 style="margin: 0 0 14px 0; font-size: 15px; font-weight: 600; color: #1d2327;">Recent Activity (Last 7 Days)</h3>
+                    <table class="wp-list-table widefat fixed striped" style="font-size: 13px;">
+                        <thead>
                             <tr>
-                                <td><?php echo esc_html($day['date']); ?></td>
-                                <td><?php echo esc_html($day['orders']); ?></td>
-                                <td><?php echo esc_html($day['revenue_kas']); ?></td>
-                                <td>$<?php echo esc_html($day['revenue_usd']); ?></td>
+                                <th style="padding: 8px;">Date</th>
+                                <th style="padding: 8px;">Orders</th>
+                                <th style="padding: 8px;">Revenue (KAS)</th>
+                                <th style="padding: 8px;">Revenue (USD)</th>
                             </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            <?php foreach (array_slice($analytics['daily_trends'], -7) as $day): ?>
+                                <tr>
+                                    <td style="padding: 8px;"><?php echo esc_html($day['date']); ?></td>
+                                    <td style="padding: 8px;">
+                                        <a href="<?php 
+                                            // Link to orders for this specific date
+                                            echo esc_url(admin_url('edit.php?post_type=shop_order&payment_method=kaspa&m=' . date('Ymd', strtotime($day['date'])))); 
+                                        ?>">
+                                            <strong><?php echo esc_html($day['orders']); ?> orders</strong>
+                                        </a>
+                                    </td>
+                                    <td style="padding: 8px;"><?php echo esc_html($day['revenue_kas']); ?></td>
+                                    <td style="padding: 8px;">$<?php echo esc_html($day['revenue_usd']); ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
             <?php else: ?>
-                <div style="text-align: center; padding: 40px; background: #f9f9f9; border-radius: 8px; color: #666;">
-                    <div style="font-size: 32px; margin-bottom: 16px;">📊</div>
-                    <h4>No Analytics Data Yet</h4>
-                    <p>Start receiving Kaspa payments to see detailed analytics here.</p>
+                <div style="text-align: center; padding: 30px; background: #f9f9f9; border-radius: 8px; color: #757575;">
+                    <div style="font-weight: 600; margin-bottom: 4px;">No Analytics Data Yet</div>
+                    <div style="font-size: 12px;">Start receiving Kaspa payments to see detailed analytics</div>
                 </div>
             <?php endif; ?>
+
+            <div style="margin-top: 20px; padding: 16px; border-top: 1px solid #e8e8e8; display: flex; gap: 12px; align-items: center;">
+                <span style="color: #757575; font-size: 12px;">Quick Links:</span>
+                <a href="<?php echo esc_url(admin_url('admin.php?page=kaspa-wallet-setup')); ?>" style="text-decoration: none; font-size: 13px;">Wallet</a>
+                <a href="<?php echo esc_url(admin_url('admin.php?page=wc-settings&tab=checkout&section=kaspa')); ?>" style="text-decoration: none; font-size: 13px;">Settings</a>
+                <a href="<?php echo esc_url(admin_url('edit.php?post_type=shop_order&payment_method=kaspa')); ?>" style="text-decoration: none; font-size: 13px;">Orders</a>
+            </div>
         </div>
+        <?php
+    }
+
+    /**
+     * Help & FAQ Page
+     */
+    public function render_help_page()
+    {
+        ?>
+        <div class="wrap kaspa-help" style="max-width: 1200px; margin: 0 auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h1 style="margin: 0; font-size: 23px;">Help & Knowledge Center</h1>
+                <a href="<?php echo esc_url(admin_url('admin.php?page=kaspa-payments-gateway')); ?>" class="button">
+                    ← Dashboard
+                </a>
+            </div>
+
+            <div style="background: linear-gradient(135deg, #70D0F0 0%, #49a8d4 100%); color: #fff; padding: 30px; border-radius: 8px; margin-bottom: 20px;">
+                <h2 style="margin: 0 0 10px 0; color: #fff;">Welcome to Kaspa Payments Gateway</h2>
+                <p style="margin: 0; font-size: 14px; opacity: 0.95;">A secure, watch-only payment gateway for WooCommerce using Kaspa's KPUB technology. Find answers to common questions and learn best practices below.</p>
+            </div>
+
+            <!-- Quick Navigation -->
+            <div id="kaspa-faq-nav" style="background: #fff; padding: 12px 20px; border-radius: 8px; border: 1px solid #e0e0e0; margin-bottom: 20px; position: sticky; top: 32px; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+                <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                    <span style="font-size: 12px; color: #757575; font-weight: 600; margin-right: 8px;">Jump to:</span>
+                    <a href="#getting-started" class="kaspa-nav-tab" style="padding: 6px 14px; border-radius: 6px; font-size: 13px; text-decoration: none; color: #646970; background: #f6f7f7; transition: all 0.2s;" onmouseover="this.style.background='#e0e0e0'" onmouseout="if(!this.classList.contains('active')) this.style.background='#f6f7f7'">Getting Started</a>
+                    <a href="#how-it-works" class="kaspa-nav-tab" style="padding: 6px 14px; border-radius: 6px; font-size: 13px; text-decoration: none; color: #646970; background: #f6f7f7; transition: all 0.2s;" onmouseover="this.style.background='#e0e0e0'" onmouseout="if(!this.classList.contains('active')) this.style.background='#f6f7f7'">How It Works</a>
+                    <a href="#troubleshooting" class="kaspa-nav-tab" style="padding: 6px 14px; border-radius: 6px; font-size: 13px; text-decoration: none; color: #646970; background: #f6f7f7; transition: all 0.2s;" onmouseover="this.style.background='#e0e0e0'" onmouseout="if(!this.classList.contains('active')) this.style.background='#f6f7f7'">Troubleshooting</a>
+                    <a href="#security" class="kaspa-nav-tab" style="padding: 6px 14px; border-radius: 6px; font-size: 13px; text-decoration: none; color: #646970; background: #f6f7f7; transition: all 0.2s;" onmouseover="this.style.background='#e0e0e0'" onmouseout="if(!this.classList.contains('active')) this.style.background='#f6f7f7'">Security</a>
+                    <a href="#technical" class="kaspa-nav-tab" style="padding: 6px 14px; border-radius: 6px; font-size: 13px; text-decoration: none; color: #646970; background: #f6f7f7; transition: all 0.2s;" onmouseover="this.style.background='#e0e0e0'" onmouseout="if(!this.classList.contains('active')) this.style.background='#f6f7f7'">Technical</a>
+                </div>
+            </div>
+
+            <!-- FAQ Sections -->
+            <div style="display: grid; gap: 20px;">
+                
+                <!-- Getting Started -->
+                <div id="getting-started" class="kaspa-faq-section" style="background: #fff; padding: 24px; border-radius: 8px; border: 1px solid #e0e0e0; scroll-margin-top: 120px;">
+                    <h2 style="margin: 0 0 16px 0; font-size: 18px; color: #1d2327; display: flex; align-items: center; gap: 8px;">
+                        <span class="dashicons dashicons-admin-network" style="color: #70D0F0;"></span>
+                        Getting Started
+                    </h2>
+                    
+                    <div class="kaspa-faq-item" style="margin-bottom: 20px;">
+                        <h3 style="font-size: 14px; font-weight: 600; margin: 0 0 8px 0; color: #2c3338;">What is a KPUB (Extended Public Key)?</h3>
+                        <p style="margin: 0; color: #646970; line-height: 1.6;">A KPUB is an Extended Public Key for Kaspa HD wallets. It's a master key that allows you to generate unlimited receiving addresses without exposing your private keys. Think of it like a "view-only" key - it can create new addresses and check balances, but it cannot spend any funds. This makes it perfect for e-commerce where security is paramount.</p>
+                    </div>
+
+                    <div class="kaspa-faq-item" style="margin-bottom: 20px;">
+                        <h3 style="font-size: 14px; font-weight: 600; margin: 0 0 8px 0; color: #2c3338;">How do I get my KPUB?</h3>
+                        <p style="margin: 0 0 8px 0; color: #646970; line-height: 1.6;">You can export your KPUB from most Kaspa wallet software:</p>
+                        <ul style="margin: 0; padding-left: 20px; color: #646970;">
+                            <li><strong>Kaspium:</strong> Settings → Advanced → Export Extended Public Key</li>
+                            <li><strong>KDX:</strong> Wallet → Settings → Extended Public Key</li>
+                            <li><strong>Other wallets:</strong> Look for "Export XPUB" or "Extended Public Key" in settings</li>
+                        </ul>
+                        <p style="margin: 8px 0 0 0; color: #646970; line-height: 1.6;">The KPUB starts with "kpub" and is approximately 111 characters long.</p>
+                    </div>
+
+                    <div class="kaspa-faq-item" style="margin-bottom: 20px;">
+                        <h3 style="font-size: 14px; font-weight: 600; margin: 0 0 8px 0; color: #2c3338;">Is my KPUB safe to store on my server?</h3>
+                        <p style="margin: 0; color: #646970; line-height: 1.6;"><strong>Yes!</strong> A KPUB cannot spend funds - it can only generate addresses and view balances. Even if someone gains access to your KPUB, they cannot steal your Kaspa. Your private keys remain secure in your wallet software. However, they could see your transaction history, so treat it with reasonable care (like you would any business data).</p>
+                    </div>
+
+                    <div class="kaspa-faq-item">
+                        <h3 style="font-size: 14px; font-weight: 600; margin: 0 0 8px 0; color: #2c3338;">Do I need to run a Kaspa node?</h3>
+                        <p style="margin: 0; color: #646970; line-height: 1.6;">No! This plugin uses public Kaspa blockchain explorers and APIs to check payments. There's no need to run your own node or any special infrastructure. Everything runs through standard WordPress/PHP.</p>
+                    </div>
+                </div>
+
+                <!-- How It Works -->
+                <div id="how-it-works" class="kaspa-faq-section" style="background: #fff; padding: 24px; border-radius: 8px; border: 1px solid #e0e0e0; scroll-margin-top: 120px;">
+                    <h2 style="margin: 0 0 16px 0; font-size: 18px; color: #1d2327; display: flex; align-items: center; gap: 8px;">
+                        <span class="dashicons dashicons-admin-tools" style="color: #70D0F0;"></span>
+                        How It Works
+                    </h2>
+                    
+                    <div class="kaspa-faq-item" style="margin-bottom: 20px;">
+                        <h3 style="font-size: 14px; font-weight: 600; margin: 0 0 8px 0; color: #2c3338;">How are payment addresses generated?</h3>
+                        <p style="margin: 0 0 8px 0; color: #646970; line-height: 1.6;">When a customer chooses Kaspa as their payment method:</p>
+                        <ol style="margin: 0; padding-left: 20px; color: #646970;">
+                            <li>The plugin derives a unique address from your KPUB using the order ID as the derivation index</li>
+                            <li>This address is displayed to the customer with a QR code</li>
+                            <li>The address is stored with the order for tracking</li>
+                            <li>The plugin monitors this specific address for incoming payments</li>
+                        </ol>
+                        <p style="margin: 8px 0 0 0; color: #646970; line-height: 1.6;">Each order gets its own unique address, making payment tracking simple and secure.</p>
+                    </div>
+
+                    <div class="kaspa-faq-item" style="margin-bottom: 20px;">
+                        <h3 style="font-size: 14px; font-weight: 600; margin: 0 0 8px 0; color: #2c3338;">How does the plugin detect payments?</h3>
+                        <p style="margin: 0; color: #646970; line-height: 1.6;">The plugin uses WordPress's WP-Cron system to automatically check pending orders every 2 minutes. It queries the Kaspa blockchain API to check if the payment address has received the expected amount. When payment is confirmed, the order status is automatically updated to "Processing" or "Completed".</p>
+                    </div>
+
+                    <div class="kaspa-faq-item" style="margin-bottom: 20px;">
+                        <h3 style="font-size: 14px; font-weight: 600; margin: 0 0 8px 0; color: #2c3338;">What are the price sources and how do fallbacks work?</h3>
+                        <p style="margin: 0 0 8px 0; color: #646970; line-height: 1.6;">The plugin supports 8 different price APIs (all spot markets, no futures/perpetuals):</p>
+                        <ul style="margin: 0 0 8px 0; padding-left: 20px; color: #646970;">
+                            <li>Kaspa API (api.kaspa.org)</li>
+                            <li>CoinGecko</li>
+                            <li>CryptoCompare</li>
+                            <li>MEXC</li>
+                            <li>KuCoin</li>
+                            <li>Gate.io</li>
+                            <li>HTX (Huobi)</li>
+                            <li>CoinEx</li>
+                        </ul>
+                        <p style="margin: 0; color: #646970; line-height: 1.6;">You configure a primary, secondary, and tertiary source. If the primary fails, the plugin automatically tries the secondary, then tertiary. Prices are cached for 5 minutes to reduce API calls.</p>
+                    </div>
+
+                    <div class="kaspa-faq-item">
+                        <h3 style="font-size: 14px; font-weight: 600; margin: 0 0 8px 0; color: #2c3338;">What happens if a customer underpays?</h3>
+                        <p style="margin: 0; color: #646970; line-height: 1.6;">The plugin checks for exact or overpayment. If a customer sends less than required, the order stays in "Pending Payment" status. You can manually review underpaid orders and either request the remaining amount, issue a partial refund, or cancel the order.</p>
+                    </div>
+                </div>
+
+                <!-- Troubleshooting -->
+                <div id="troubleshooting" class="kaspa-faq-section" style="background: #fff; padding: 24px; border-radius: 8px; border: 1px solid #e0e0e0; scroll-margin-top: 120px;">
+                    <h2 style="margin: 0 0 16px 0; font-size: 18px; color: #1d2327; display: flex; align-items: center; gap: 8px;">
+                        <span class="dashicons dashicons-sos" style="color: #70D0F0;"></span>
+                        Troubleshooting
+                    </h2>
+                    
+                    <div class="kaspa-faq-item" style="margin-bottom: 20px;">
+                        <h3 style="font-size: 14px; font-weight: 600; margin: 0 0 8px 0; color: #2c3338;">Payments aren't being detected automatically</h3>
+                        <p style="margin: 0 0 8px 0; color: #646970; line-height: 1.6;"><strong>Check these common issues:</strong></p>
+                        <ul style="margin: 0; padding-left: 20px; color: #646970;">
+                            <li><strong>WP-Cron disabled:</strong> Some hosts disable WP-Cron. Check with your host or set up a real cron job</li>
+                            <li><strong>Low traffic site:</strong> WP-Cron only runs when your site gets visitors. Consider setting up a real cron job that hits <code>wp-cron.php</code></li>
+                            <li><strong>Firewall/API blocking:</strong> Ensure your server can make outbound HTTPS requests to Kaspa APIs</li>
+                            <li><strong>Check Monitoring status:</strong> Look at the dashboard - the "Monitoring" indicator should be green</li>
+                        </ul>
+                    </div>
+
+                    <div class="kaspa-faq-item" style="margin-bottom: 20px;">
+                        <h3 style="font-size: 14px; font-weight: 600; margin: 0 0 8px 0; color: #2c3338;">Price API shows red/unavailable</h3>
+                        <p style="margin: 0 0 8px 0; color: #646970; line-height: 1.6;"><strong>Try these steps:</strong></p>
+                        <ul style="margin: 0; padding-left: 20px; color: #646970;">
+                            <li>Check if your server can make HTTPS requests to external APIs</li>
+                            <li>Try switching to a different primary price source in settings</li>
+                            <li>Contact your host to ensure outbound API calls aren't blocked</li>
+                            <li>Check WordPress error logs for specific API error messages</li>
+                        </ul>
+                    </div>
+
+                    <div class="kaspa-faq-item" style="margin-bottom: 20px;">
+                        <h3 style="font-size: 14px; font-weight: 600; margin: 0 0 8px 0; color: #2c3338;">Balance isn't showing all my funds</h3>
+                        <p style="margin: 0; color: #646970; line-height: 1.6;">The balance checker only shows funds in addresses generated by the plugin (order addresses). If you've sent funds directly to other addresses in your KPUB wallet, they won't appear here. This is intentional - the plugin only tracks order-related addresses to keep performance fast.</p>
+                    </div>
+
+                    <div class="kaspa-faq-item">
+                        <h3 style="font-size: 14px; font-weight: 600; margin: 0 0 8px 0; color: #2c3338;">Customer says they paid but order is still pending</h3>
+                        <p style="margin: 0 0 8px 0; color: #646970; line-height: 1.6;"><strong>Manual verification steps:</strong></p>
+                        <ol style="margin: 0; padding-left: 20px; color: #646970;">
+                            <li>Check the order details for the payment address</li>
+                            <li>Look up that address on a Kaspa block explorer (e.g., explorer.kaspa.org)</li>
+                            <li>Verify the payment amount and transaction hash</li>
+                            <li>If payment is confirmed on-chain but not in WooCommerce, click "Check Payment Status" on the order edit page</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <!-- Security & Best Practices -->
+                <div id="security" class="kaspa-faq-section" style="background: #fff; padding: 24px; border-radius: 8px; border: 1px solid #e0e0e0; scroll-margin-top: 120px;">
+                    <h2 style="margin: 0 0 16px 0; font-size: 18px; color: #1d2327; display: flex; align-items: center; gap: 8px;">
+                        <span class="dashicons dashicons-shield" style="color: #70D0F0;"></span>
+                        Security & Best Practices
+                    </h2>
+                    
+                    <div class="kaspa-faq-item" style="margin-bottom: 20px;">
+                        <h3 style="font-size: 14px; font-weight: 600; margin: 0 0 8px 0; color: #2c3338;">How should I manage my private keys?</h3>
+                        <p style="margin: 0 0 8px 0; color: #646970; line-height: 1.6;"><strong>Critical security practices:</strong></p>
+                        <ul style="margin: 0; padding-left: 20px; color: #646970;">
+                            <li><strong>Never store private keys on your server</strong> - only the KPUB goes on the server</li>
+                            <li>Keep your private keys/mnemonic in secure wallet software (hardware wallet recommended)</li>
+                            <li>Regularly sweep funds from your payment wallet to cold storage</li>
+                            <li>Back up your mnemonic phrase in a secure, offline location</li>
+                            <li>Use a dedicated wallet for payments, separate from your main holdings</li>
+                        </ul>
+                    </div>
+
+                    <div class="kaspa-faq-item" style="margin-bottom: 20px;">
+                        <h3 style="font-size: 14px; font-weight: 600; margin: 0 0 8px 0; color: #2c3338;">Should I sweep payments to cold storage?</h3>
+                        <p style="margin: 0; color: #646970; line-height: 1.6;"><strong>Yes, regularly!</strong> While your KPUB can't spend funds, best practice is to periodically move accumulated payments to a cold storage wallet. This limits exposure if your server is ever compromised. You can continue using the same KPUB after sweeping - it will keep generating new addresses for future orders.</p>
+                    </div>
+
+                    <div class="kaspa-faq-item" style="margin-bottom: 20px;">
+                        <h3 style="font-size: 14px; font-weight: 600; margin: 0 0 8px 0; color: #2c3338;">What about PCI compliance?</h3>
+                        <p style="margin: 0; color: #646970; line-height: 1.6;">Cryptocurrency payments are generally outside the scope of PCI-DSS since you're not handling credit card data. However, you should still follow general security best practices: keep WordPress and plugins updated, use HTTPS, implement strong admin passwords, and regular backups.</p>
+                    </div>
+
+                    <div class="kaspa-faq-item">
+                        <h3 style="font-size: 14px; font-weight: 600; margin: 0 0 8px 0; color: #2c3338;">What data does the plugin store?</h3>
+                        <p style="margin: 0 0 8px 0; color: #646970; line-height: 1.6;">The plugin stores:</p>
+                        <ul style="margin: 0; padding-left: 20px; color: #646970;">
+                            <li>Your KPUB (extended public key) - encrypted in WordPress database</li>
+                            <li>Generated payment addresses per order</li>
+                            <li>Transaction IDs when payments are confirmed</li>
+                            <li>Expected and received payment amounts</li>
+                        </ul>
+                        <p style="margin: 8px 0 0 0; color: #646970; line-height: 1.6;">No private keys, mnemonics, or spending capabilities are ever stored.</p>
+                    </div>
+                </div>
+
+                <!-- Technical Details -->
+                <div id="technical" class="kaspa-faq-section" style="background: #fff; padding: 24px; border-radius: 8px; border: 1px solid #e0e0e0; scroll-margin-top: 120px;">
+                    <h2 style="margin: 0 0 16px 0; font-size: 18px; color: #1d2327; display: flex; align-items: center; gap: 8px;">
+                        <span class="dashicons dashicons-admin-settings" style="color: #70D0F0;"></span>
+                        Technical Details
+                    </h2>
+                    
+                    <div class="kaspa-faq-item" style="margin-bottom: 20px;">
+                        <h3 style="font-size: 14px; font-weight: 600; margin: 0 0 8px 0; color: #2c3338;">What blockchain APIs does the plugin use?</h3>
+                        <p style="margin: 0 0 8px 0; color: #646970; line-height: 1.6;">The plugin uses:</p>
+                        <ul style="margin: 0; padding-left: 20px; color: #646970;">
+                            <li><strong>Price data:</strong> Multiple exchange APIs (configurable)</li>
+                            <li><strong>Balance checks:</strong> api.kaspa.org for address balances</li>
+                            <li><strong>Transaction verification:</strong> api.kaspa.org for UTXOs and confirmations</li>
+                        </ul>
+                        <p style="margin: 8px 0 0 0; color: #646970; line-height: 1.6;">All connections use HTTPS. The plugin includes fallback logic if an API is temporarily unavailable.</p>
+                    </div>
+
+                    <div class="kaspa-faq-item" style="margin-bottom: 20px;">
+                        <h3 style="font-size: 14px; font-weight: 600; margin: 0 0 8px 0; color: #2c3338;">How often does the plugin check for payments?</h3>
+                        <p style="margin: 0; color: #646970; line-height: 1.6;">The background monitoring system checks all pending Kaspa orders every 2 minutes using WP-Cron. When you're viewing an order page, you can also manually trigger a check with the "Check Payment Status" button.</p>
+                    </div>
+
+                    <div class="kaspa-faq-item" style="margin-bottom: 20px;">
+                        <h3 style="font-size: 14px; font-weight: 600; margin: 0 0 8px 0; color: #2c3338;">Does this work with HPOS (High-Performance Order Storage)?</h3>
+                        <p style="margin: 0; color: #646970; line-height: 1.6;">Yes! The plugin is fully compatible with WooCommerce's HPOS feature. It uses WooCommerce's standard order meta APIs which work with both traditional and HPOS storage.</p>
+                    </div>
+
+                    <div class="kaspa-faq-item">
+                        <h3 style="font-size: 14px; font-weight: 600; margin: 0 0 8px 0; color: #2c3338;">Can I use this on a multisite installation?</h3>
+                        <p style="margin: 0; color: #646970; line-height: 1.6;">The plugin works on WordPress multisite, but each site needs its own WooCommerce installation and separate KPUB configuration. Payment tracking is site-specific.</p>
+                    </div>
+                </div>
+
+                <!-- Support -->
+                <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 24px; border-radius: 8px; border: 1px solid #e0e0e0; text-align: center;">
+                    <h2 style="margin: 0 0 12px 0; font-size: 18px; color: #1d2327;">Still Need Help?</h2>
+                    <p style="margin: 0 0 16px 0; color: #646970;">Can't find what you're looking for? We're here to help!</p>
+                    <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                        <a href="https://wordpress.org/support/plugin/kaspa-payments-gateway-woocommerce/" target="_blank" class="button button-primary">
+                            Visit Support Forum
+                        </a>
+                        <a href="https://github.com/jacoborbach/kaspa-payments-gateway-woocommerce/issues" target="_blank" class="button button-secondary">
+                            Report an Issue
+                        </a>
+                        <a href="https://kaspa.org" target="_blank" class="button button-secondary">
+                            Learn About Kaspa
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Review Link -->
+                <div style="text-align: center; padding: 16px 0; margin-top: 20px;">
+                    <p style="margin: 0; font-size: 12px; color: #646970;">
+                        Like this plugin? <a href="https://wordpress.org/plugins/kaspa-payments-gateway-woocommerce/#reviews" target="_blank" rel="noopener noreferrer" style="color: #2271b1; text-decoration: none; font-weight: 600;">Leave a 5-star review ⭐⭐⭐⭐⭐</a>
+                    </p>
+                </div>
+
+            </div>
+        </div>
+
+        <script>
+        (function() {
+            // Smooth scroll to sections
+            document.querySelectorAll('.kaspa-nav-tab').forEach(function(tab) {
+                tab.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    var targetId = this.getAttribute('href').substring(1);
+                    var targetElement = document.getElementById(targetId);
+                    if (targetElement) {
+                        targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        // Update active state immediately
+                        updateActiveTab(this);
+                    }
+                });
+            });
+
+            // Update active tab highlighting
+            function updateActiveTab(activeTab) {
+                document.querySelectorAll('.kaspa-nav-tab').forEach(function(tab) {
+                    tab.classList.remove('active');
+                    tab.style.background = '#f6f7f7';
+                    tab.style.color = '#646970';
+                    tab.style.fontWeight = 'normal';
+                });
+                activeTab.classList.add('active');
+                activeTab.style.background = '#70D0F0';
+                activeTab.style.color = '#fff';
+                activeTab.style.fontWeight = '600';
+            }
+
+            // Highlight active section on scroll
+            var sections = document.querySelectorAll('.kaspa-faq-section');
+            var navTabs = document.querySelectorAll('.kaspa-nav-tab');
+            
+            function highlightNavOnScroll() {
+                var scrollPos = window.scrollY + 150; // Offset for sticky nav
+                
+                sections.forEach(function(section, index) {
+                    var sectionTop = section.offsetTop;
+                    var sectionBottom = sectionTop + section.offsetHeight;
+                    
+                    if (scrollPos >= sectionTop && scrollPos < sectionBottom) {
+                        updateActiveTab(navTabs[index]);
+                    }
+                });
+            }
+
+            // Debounce scroll event for performance
+            var scrollTimeout;
+            window.addEventListener('scroll', function() {
+                if (scrollTimeout) {
+                    window.cancelAnimationFrame(scrollTimeout);
+                }
+                scrollTimeout = window.requestAnimationFrame(function() {
+                    highlightNavOnScroll();
+                });
+            });
+
+            // Set initial active tab on page load
+            if (window.location.hash) {
+                var initialTab = document.querySelector('.kaspa-nav-tab[href="' + window.location.hash + '"]');
+                if (initialTab) {
+                    setTimeout(function() {
+                        updateActiveTab(initialTab);
+                    }, 100);
+                }
+            } else {
+                // Default to first tab
+                updateActiveTab(navTabs[0]);
+            }
+        })();
+        </script>
         <?php
     }
 
@@ -517,6 +954,35 @@ class KASPPAGA_Admin_Dashboard
 
         $stats = $this->get_payment_stats();
         wp_send_json_success($stats);
+    }
+
+    /**
+     * Get system health data for dashboard (wallet, rate API, polling).
+     */
+    private function get_system_health_data()
+    {
+        $wallet_configured = (bool) get_option('kasppaga_wallet_configured');
+        $rate_ok = false;
+        $rate_value = null;
+        if (function_exists('WC') && WC()->payment_gateways()) {
+            $gateways = WC()->payment_gateways()->payment_gateways();
+            if (isset($gateways['kaspa']) && method_exists($gateways['kaspa'], 'get_kas_rate')) {
+                $rate_value = $gateways['kaspa']->get_kas_rate();
+                $rate_ok = ($rate_value !== false && $rate_value > 0);
+            }
+        }
+        $next_poll = wp_next_scheduled('kasppaga_poll_payments') ? wp_next_scheduled('kasppaga_poll_payments') : 0;
+        $polling_active = ($next_poll > 0);
+        $next_poll_in = $polling_active ? max(0, $next_poll - time()) : 0;
+        $last_rate_update = get_option('kaspa_rate_last_updated', 0);
+        return array(
+            'wallet_configured' => $wallet_configured,
+            'rate_ok' => $rate_ok,
+            'rate_value' => $rate_value,
+            'polling_active' => $polling_active,
+            'next_poll_seconds' => $next_poll_in,
+            'last_rate_update' => $last_rate_update,
+        );
     }
 
     /**

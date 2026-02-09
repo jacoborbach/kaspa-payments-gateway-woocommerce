@@ -27,13 +27,6 @@
      * Initialize the checkout system
      */
     function initializeCheckout() {
-        console.log('🚀 Kaspa Checkout initialized (Polling Only)');
-        console.log('Order ID:', orderId);
-        console.log('Expected Amount:', expectedAmount, 'KAS');
-        console.log('AJAX URL:', ajaxUrl);
-        console.log('Payment Nonce:', paymentNonce);
-        console.log('kaspaCheckoutData:', window.kaspaCheckoutData);
-
         // Start price updates if price widget exists
         if (document.getElementById('kaspa-current-price')) {
             startPriceUpdates();
@@ -55,14 +48,10 @@
      * Start monitoring for payment (AJAX polling)
      */
     function startPaymentMonitoring() {
-        console.log('👁️ startPaymentMonitoring() called - paymentCheckActive:', paymentCheckActive, 'orderId:', orderId);
-
         if (paymentCheckActive || !orderId) {
-            console.log('❌ Payment monitoring skipped - paymentCheckActive:', paymentCheckActive, 'orderId:', orderId);
             return;
         }
 
-        console.log('👁️ Starting AJAX payment monitoring...');
         paymentCheckActive = true;
 
         // Update status message
@@ -83,14 +72,9 @@
      * Check payment status via AJAX polling
      */
     function checkPaymentStatus() {
-        console.log('🔍 checkPaymentStatus() called - paymentCheckActive:', paymentCheckActive, 'ajaxUrl:', ajaxUrl, 'orderId:', orderId);
-
         if (!paymentCheckActive || !ajaxUrl) {
-            console.log('❌ Payment check skipped - paymentCheckActive:', paymentCheckActive, 'ajaxUrl:', ajaxUrl);
             return;
         }
-
-        console.log('🔍 Checking payment status via AJAX...');
 
         const xhr = new XMLHttpRequest();
         xhr.open('POST', ajaxUrl, true);
@@ -107,7 +91,6 @@
                             // Don't show error if address is still being generated
                             const errorMsg = response.data || '';
                             if (errorMsg.includes('Missing payment information') || errorMsg.includes('Generating')) {
-                                console.log('Address still being generated, will retry...');
                                 updatePaymentStatus('⏳ Setting up payment address...', 'checking');
                             } else {
                                 console.error('Payment check failed:', response.data);
@@ -133,8 +116,6 @@
      * Handle payment response from AJAX polling
      */
     function handlePaymentResponse(data) {
-        console.log('📨 AJAX Payment response:', data);
-
         if (data.status === 'completed') {
             handlePaymentConfirmed(data);
         } else if (data.status === 'pending') {
@@ -148,8 +129,6 @@
      * Handle payment confirmation from AJAX polling
      */
     function handlePaymentConfirmed(data) {
-        console.log('🎉 AJAX Payment confirmed!', data);
-
         stopPaymentChecking();
         updatePaymentStatus('✅ Payment confirmed! Your order is being processed.', 'success');
         showNotification('🎉 Payment received and confirmed!', 'success');
@@ -186,8 +165,6 @@
             statusEl.textContent = message;
             statusEl.className = 'kaspa-payment-status ' + status;
         }
-
-        console.log('📊 Payment status:', status, '-', message);
     }
 
     /**
@@ -199,7 +176,6 @@
             clearInterval(paymentCheckInterval);
             paymentCheckInterval = null;
         }
-        console.log('⏹️ Payment monitoring stopped');
     }
 
     /**
@@ -208,7 +184,6 @@
     function startPriceUpdates() {
         if (!ajaxUrl) return;
 
-        console.log('💰 Starting price updates...');
         priceUpdateInterval = setInterval(updateKaspaPrice, 15000);
         startCountdown();
     }
@@ -406,7 +381,6 @@
         if (priceUpdateInterval) clearInterval(priceUpdateInterval);
         if (countdownInterval) clearInterval(countdownInterval);
         if (paymentCheckInterval) clearInterval(paymentCheckInterval);
-        console.log('🧹 Cleanup completed');
     }
 
     /**
