@@ -32,6 +32,20 @@ Kaspa Payments Gateway for WooCommerce enables your WooCommerce store to accept 
 * PHP 7.4+
 * Kaspa wallet (Kaspium recommended) with KPUB export capability
 
+= External Services =
+
+This plugin connects to the following third-party services:
+
+**Kaspa API (api.kaspa.org)** – Payment verification and optional price source. Sends payment addresses only (public blockchain data). [More info](https://api.kaspa.org)
+
+**Price APIs** – Configurable sources for KAS/USD rates (no user data sent):
+
+* CoinGecko ([Terms](https://www.coingecko.com/en/terms) | [Privacy](https://www.coingecko.com/en/privacy))
+* CryptoCompare ([Terms](https://www.cryptocompare.com/terms) | [Privacy](https://www.cryptocompare.com/privacy-policy))
+* MEXC, KuCoin, Gate.io, HTX, CoinEx – Public ticker endpoints (no API key required)
+
+**QR Server API (api.qrserver.com)** – Generates QR codes for payment addresses. Sends address and amount only. ([Terms](https://goqr.me/api/terms-of-service/) | [Privacy](https://goqr.me/api/privacy-policy/))
+
 == Installation ==
 
 1. Upload the plugin files to `/wp-content/plugins/kaspa-payments-gateway-woocommerce/`
@@ -44,13 +58,6 @@ Kaspa Payments Gateway for WooCommerce enables your WooCommerce store to accept 
 1. **Export KPUB from Kaspium**: Open your Kaspium wallet → Settings → Export Extended Public Key
 2. **Import in WordPress**: Kaspa → Wallet Setup → Paste KPUB → Validate & Import
 3. **Enable Payments**: WooCommerce → Settings → Payments → Enable "Kaspa Payments"
-
-== Screenshots ==
-
-1. Dashboard with Total Sales, Total Orders, Success Rate, and Recent Orders
-2. Customer payment page with QR code, address, and amount to send
-3. Wallet active – KPUB watch-only status and benefits
-4. Wallet setup – Import Extended Public Key (KPUB)
 
 == Frequently Asked Questions ==
 
@@ -73,6 +80,13 @@ Payment amounts update in real-time based on current exchange rates. Customers s
 = Will addresses appear in my Kaspium wallet? =
 
 Yes. Addresses are generated sequentially starting from index 0, so they automatically appear in Kaspium wallets.
+
+== Screenshots ==
+
+1. Dashboard with Total Sales, Total Orders, Success Rate, and Recent Orders
+2. Customer payment page with QR code, address, and amount to send
+3. Wallet active – KPUB watch-only status and benefits
+4. Wallet setup – Import Extended Public Key (KPUB)
 
 == Changelog ==
 
@@ -119,17 +133,4 @@ Adds CryptoCompare fallback and dismissible review prompt.
 
 = 1.0.3 =
 Fixes wallet reset, status display, and payment page routing.
-
-== External Services ==
-
-This plugin connects to the following third-party services:
-
-**Kaspa API (api.kaspa.org)** – Payment verification and optional price source. Sends payment addresses only (public blockchain data). [More info](https://api.kaspa.org)
-
-**Price APIs** – Configurable sources for KAS/USD rates (no user data sent):
-* CoinGecko ([Terms](https://www.coingecko.com/en/terms) | [Privacy](https://www.coingecko.com/en/privacy))
-* CryptoCompare ([Terms](https://www.cryptocompare.com/terms) | [Privacy](https://www.cryptocompare.com/privacy-policy))
-* MEXC, KuCoin, Gate.io, HTX, CoinEx – Public ticker endpoints (no API key required)
-
-**QR Server API (api.qrserver.com)** – Generates QR codes for payment addresses. Sends address and amount only. ([Terms](https://goqr.me/api/terms-of-service/) | [Privacy](https://goqr.me/api/privacy-policy/))
 
