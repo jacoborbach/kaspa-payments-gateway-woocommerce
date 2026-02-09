@@ -1,0 +1,1239 @@
+/**
+ * Kaspa Wallet Setup Styles - Mnemonic Based
+ * File: assets/kaspa-wallet-setup.css
+ */
+
+/* ==========================================================================
+   Main Setup Container
+   ========================================================================== */
+
+.kaspa-wallet-setup {
+    background: #f1f1f1;
+    margin: 0 -20px -10px -22px;
+    padding: 20px;
+    min-height: 100vh;
+}
+
+.kaspa-setup-container {
+    max-width: 900px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.kaspa-setup-header {
+    background: linear-gradient(135deg, #70D0F0, #4FC3F7);
+    color: white;
+    padding: 40px;
+    text-align: center;
+}
+
+.kaspa-setup-header h1 {
+    font-size: 32px;
+    margin-bottom: 12px;
+    font-weight: 600;
+}
+
+.kaspa-setup-header p {
+    opacity: 0.9;
+    font-size: 18px;
+    margin: 0;
+}
+
+.kaspa-setup-content {
+    padding: 40px;
+}
+
+/* ==========================================================================
+   Step Indicator
+   ========================================================================== */
+
+.kaspa-step-indicator {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 40px;
+}
+
+.kaspa-step-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #ddd;
+    margin: 0 8px;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.kaspa-step-dot.active {
+    background: #70D0F0;
+    transform: scale(1.3);
+}
+
+.kaspa-step-dot.completed {
+    background: #00a32a;
+    transform: scale(1.1);
+}
+
+.kaspa-step-dot.completed::after {
+    content: "✓";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 10px;
+    font-weight: bold;
+}
+
+/* ==========================================================================
+   Setup Steps
+   ========================================================================== */
+
+.kaspa-setup-step {
+    display: none;
+    animation: kaspaFadeIn 0.5s ease-in-out;
+}
+
+.kaspa-setup-step.active {
+    display: block;
+}
+
+@keyframes kaspaFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.kaspa-setup-step h2 {
+    font-size: 24px;
+    color: #1d2327;
+    margin-bottom: 16px;
+    font-weight: 600;
+}
+
+.kaspa-setup-step p {
+    font-size: 16px;
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 24px;
+}
+
+/* ==========================================================================
+   Setup Options (Step 1)
+   ========================================================================== */
+
+.kaspa-setup-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 32px;
+}
+
+.kaspa-setup-option {
+    border: 2px solid #e1e1e1;
+    border-radius: 12px;
+    padding: 24px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: #f9f9f9;
+}
+
+.kaspa-setup-option:hover {
+    border-color: #70D0F0;
+    background: #f0f8ff;
+    transform: translateY(-2px);
+}
+
+.kaspa-setup-option.selected {
+    border-color: #70D0F0;
+    background: #e3f2fd;
+    box-shadow: 0 4px 12px rgba(112, 208, 240, 0.3);
+}
+
+.kaspa-option-icon {
+    font-size: 48px;
+    text-align: center;
+    margin-bottom: 16px;
+}
+
+.kaspa-option-content h3 {
+    font-size: 20px;
+    color: #1d2327;
+    margin-bottom: 12px;
+    font-weight: 600;
+}
+
+.kaspa-option-content p {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 16px;
+    line-height: 1.5;
+}
+
+.kaspa-feature-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.kaspa-feature-list li {
+    font-size: 13px;
+    color: #555;
+    margin-bottom: 8px;
+    padding-left: 0;
+}
+
+/* ==========================================================================
+   Entropy Collection (Wallet Generation)
+   ========================================================================== */
+
+.kaspa-generation-section {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+}
+
+.kaspa-entropy-display {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.kaspa-entropy-display h4 {
+    color: #1d2327;
+    margin-bottom: 12px;
+}
+
+#kaspa-entropy-canvas {
+    border: 2px solid #70D0F0;
+    border-radius: 8px;
+    margin: 16px 0;
+    cursor: crosshair;
+    background: white;
+}
+
+.kaspa-entropy-bar {
+    width: 100%;
+    height: 8px;
+    background: #e1e1e1;
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 16px 0;
+}
+
+.kaspa-entropy-progress {
+    height: 100%;
+    background: linear-gradient(90deg, #ff6b6b, #ffa500, #70D0F0);
+    width: 0%;
+    transition: width 0.3s ease;
+}
+
+.kaspa-entropy-progress.sufficient {
+    background: #00a32a;
+}
+
+.kaspa-entropy-text {
+    font-size: 14px;
+    color: #666;
+    margin: 8px 0;
+}
+
+.kaspa-generate-controls {
+    text-align: center;
+}
+
+/* ==========================================================================
+   Mnemonic Display
+   ========================================================================== */
+
+.kaspa-mnemonic-display {
+    background: #fff;
+    border: 2px solid #70D0F0;
+    border-radius: 12px;
+    padding: 24px;
+    margin: 24px 0;
+}
+
+.kaspa-security-warning {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 24px;
+    text-align: center;
+}
+
+.kaspa-security-warning strong {
+    color: #856404;
+    display: block;
+    font-size: 16px;
+    margin-bottom: 8px;
+}
+
+.kaspa-security-warning p {
+    color: #856404;
+    margin: 0;
+    font-size: 14px;
+}
+
+.kaspa-mnemonic-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin: 24px 0;
+}
+
+.kaspa-mnemonic-word {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+    transition: all 0.2s ease;
+}
+
+.kaspa-mnemonic-word:hover {
+    background: #e9ecef;
+    border-color: #70D0F0;
+}
+
+.kaspa-word-number {
+    font-size: 10px;
+    color: #666;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.kaspa-word-text {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1d2327;
+    font-family: 'Courier New', monospace;
+}
+
+.kaspa-mnemonic-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 16px;
+}
+
+/* ==========================================================================
+   Form Elements
+   ========================================================================== */
+
+.kaspa-form-group {
+    margin-bottom: 24px;
+}
+
+.kaspa-form-group label {
+    display: block;
+    font-weight: 600;
+    color: #1d2327;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.kaspa-form-group textarea,
+.kaspa-form-group input[type="text"],
+.kaspa-form-group input[type="password"] {
+    width: 100%;
+    padding: 16px;
+    border: 2px solid #e1e1e1;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    font-family: inherit;
+}
+
+.kaspa-form-group textarea {
+    min-height: 120px;
+    font-family: 'Courier New', monospace;
+    resize: vertical;
+}
+
+.kaspa-form-group input[type="password"] {
+    font-family: inherit;
+}
+
+.kaspa-form-group textarea:focus,
+.kaspa-form-group input:focus {
+    outline: none;
+    border-color: #70D0F0;
+    box-shadow: 0 0 0 3px rgba(112, 208, 240, 0.1);
+}
+
+.kaspa-form-group input.success {
+    border-color: #00a32a;
+}
+
+.kaspa-form-group input.error {
+    border-color: #d63384;
+}
+
+.kaspa-help-text {
+    font-size: 13px;
+    color: #666;
+    margin-top: 8px;
+    line-height: 1.4;
+}
+
+/* Password Strength Indicator */
+.kaspa-password-strength {
+    margin-top: 8px;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    display: none;
+}
+
+.kaspa-password-strength.weak {
+    background: #f8d7da;
+    color: #842029;
+    border: 1px solid #f1aeb5;
+}
+
+.kaspa-password-strength.fair {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+
+.kaspa-password-strength.good {
+    background: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #b8daff;
+}
+
+.kaspa-password-strength.strong {
+    background: #d1e7dd;
+    color: #0f5132;
+    border: 1px solid #a3cfbb;
+}
+
+/* Checkbox Groups */
+.kaspa-checkbox-group {
+    margin: 24px 0;
+}
+
+.kaspa-checkbox-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    cursor: pointer;
+    line-height: 1.5;
+}
+
+.kaspa-checkbox-label input[type="checkbox"] {
+    margin-top: 4px;
+    flex-shrink: 0;
+}
+
+.kaspa-checkbox-text {
+    font-size: 14px;
+    color: #555;
+}
+
+/* ==========================================================================
+   Validation Results
+   ========================================================================== */
+
+.kaspa-validation-result {
+    margin-top: 16px;
+    padding: 12px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    display: none;
+    font-weight: 500;
+}
+
+.kaspa-validation-result.success {
+    background: #d1e7dd;
+    color: #0f5132;
+    border: 1px solid #a3cfbb;
+}
+
+.kaspa-validation-result.error {
+    background: #f8d7da;
+    color: #842029;
+    border: 1px solid #f1aeb5;
+}
+
+.kaspa-validation-result.show {
+    display: block;
+}
+
+/* ==========================================================================
+   Info Boxes
+   ========================================================================== */
+
+.kaspa-security-notice {
+    background: #e3f2fd;
+    border: 1px solid #90caf9;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 24px 0;
+}
+
+.kaspa-security-notice h4 {
+    color: #1565c0;
+    font-size: 16px;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.kaspa-security-notice p {
+    color: #1565c0;
+    font-size: 14px;
+    margin: 0;
+    line-height: 1.5;
+}
+
+.kaspa-security-info {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0;
+}
+
+.kaspa-security-info h4 {
+    color: #1d2327;
+    margin-bottom: 12px;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.kaspa-security-info ul {
+    margin: 0;
+    padding-left: 20px;
+    color: #666;
+    line-height: 1.6;
+}
+
+.kaspa-security-info li {
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+/* ==========================================================================
+   Wallet Dashboard (When Configured)
+   ========================================================================== */
+
+.kaspa-wallet-dashboard {
+    max-width: 800px;
+}
+
+.kaspa-wallet-status,
+.kaspa-wallet-info,
+.kaspa-wallet-actions,
+.kaspa-security-reminders {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+    border: 1px solid #e9ecef;
+}
+
+.kaspa-wallet-status h3,
+.kaspa-wallet-info h3,
+.kaspa-wallet-actions h3,
+.kaspa-security-reminders h3 {
+    margin: 0 0 20px 0;
+    font-size: 18px;
+    color: #1d2327;
+    font-weight: 600;
+}
+
+.kaspa-status-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+}
+
+.kaspa-status-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 14px 16px;
+    gap: 12px;
+    border-bottom: 1px solid #e9ecef;
+    background: white;
+    border-radius: 8px;
+    margin-bottom: 8px;
+}
+
+.kaspa-status-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.kaspa-status-label {
+    font-weight: 500;
+    color: #666;
+    line-height: 1.4;
+}
+
+.kaspa-status-value {
+    font-weight: 600;
+    color: #1d2327;
+    line-height: 1.4;
+    text-align: right;
+}
+
+.kaspa-status-value.success {
+    color: #00a32a;
+}
+
+.kaspa-info-item {
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.kaspa-info-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.kaspa-info-item label {
+    display: block;
+    font-weight: 600;
+    color: #1d2327;
+    margin-bottom: 8px;
+}
+
+.kaspa-address-display {
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 12px;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    word-break: break-all;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.kaspa-reminder-box {
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 16px;
+}
+
+.kaspa-reminder-box ul {
+    margin: 0;
+    padding-left: 20px;
+    color: #666;
+    line-height: 1.6;
+}
+
+.kaspa-reminder-box li {
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+/* ==========================================================================
+   Buttons
+   ========================================================================== */
+
+.kaspa-button-group {
+    display: flex;
+    gap: 16px;
+    margin-top: 32px;
+}
+
+.kaspa-btn {
+    padding: 16px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    text-align: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 140px;
+}
+
+.kaspa-btn-primary {
+    background: #70D0F0;
+    color: white;
+}
+
+.kaspa-btn-primary:hover:not(:disabled) {
+    background: #4FC3F7;
+    transform: translateY(-1px);
+    color: white;
+    text-decoration: none;
+}
+
+.kaspa-btn-primary:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.kaspa-btn-secondary {
+    background: #f1f1f1;
+    color: #666;
+}
+
+.kaspa-btn-secondary:hover {
+    background: #e1e1e1;
+    color: #666;
+    text-decoration: none;
+}
+
+.kaspa-btn-warning {
+    background: #ffc107;
+    color: #212529;
+}
+
+.kaspa-btn-warning:hover {
+    background: #e0a800;
+    color: #212529;
+    text-decoration: none;
+}
+
+.kaspa-btn-small {
+    padding: 8px 16px;
+    font-size: 12px;
+    min-width: auto;
+}
+
+/* ==========================================================================
+   Success Summary
+   ========================================================================== */
+
+.kaspa-success-summary {
+    background: #d1e7dd;
+    border: 1px solid #a3cfbb;
+    border-radius: 12px;
+    padding: 24px;
+    margin: 24px 0;
+}
+
+.kaspa-success-summary h4 {
+    color: #0f5132;
+    margin-bottom: 16px;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.kaspa-next-steps {
+    background: #e3f2fd;
+    border-radius: 8px;
+    padding: 24px;
+    margin: 24px 0;
+}
+
+.kaspa-next-steps h4 {
+    color: #1565c0;
+    margin-bottom: 16px;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+/* ==========================================================================
+   Modal Styles
+   ========================================================================== */
+
+.kaspa-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.kaspa-modal-content {
+    background: white;
+    border-radius: 12px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.kaspa-modal-header {
+    background: #f8f9fa;
+    padding: 20px;
+    border-bottom: 1px solid #e1e1e1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.kaspa-modal-header h3 {
+    margin: 0;
+    font-size: 18px;
+    color: #1d2327;
+}
+
+.kaspa-modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.kaspa-modal-close:hover {
+    color: #1d2327;
+    background: #e9ecef;
+}
+
+.kaspa-modal-body {
+    padding: 24px;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.kaspa-recovery-info h4 {
+    color: #1d2327;
+    margin: 20px 0 8px 0;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.kaspa-recovery-info ul,
+.kaspa-recovery-info ol {
+    margin: 8px 0 16px 0;
+    padding-left: 20px;
+    color: #666;
+    line-height: 1.6;
+}
+
+.kaspa-recovery-info li {
+    margin-bottom: 4px;
+    font-size: 14px;
+}
+
+.kaspa-warning-box {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 8px;
+    padding: 16px;
+    margin: 16px 0;
+}
+
+.kaspa-warning-box strong {
+    color: #856404;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.kaspa-warning-box {
+    color: #856404;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* ==========================================================================
+   Notifications
+   ========================================================================== */
+
+.kaspa-notification {
+    position: fixed;
+    top: 32px;
+    right: 20px;
+    background: #28a745;
+    color: white;
+    padding: 16px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    font-weight: 600;
+    z-index: 9999;
+    transform: translateX(400px);
+    transition: transform 0.3s ease;
+    max-width: 400px;
+}
+
+.kaspa-notification.show {
+    transform: translateX(0);
+}
+
+.kaspa-notification.error {
+    background: #dc3545;
+}
+
+.kaspa-notification.warning {
+    background: #ffc107;
+    color: #212529;
+}
+
+.kaspa-notification.info {
+    background: #17a2b8;
+}
+
+/* ==========================================================================
+   Responsive Design
+   ========================================================================== */
+
+@media (max-width: 768px) {
+    .kaspa-wallet-setup {
+        margin: 0 -10px -10px -12px;
+        padding: 10px;
+    }
+
+    .kaspa-setup-container {
+        border-radius: 8px;
+    }
+
+    .kaspa-setup-header,
+    .kaspa-setup-content {
+        padding: 20px;
+    }
+
+    .kaspa-setup-header h1 {
+        font-size: 24px;
+    }
+
+    .kaspa-setup-header p {
+        font-size: 16px;
+    }
+
+    .kaspa-setup-options {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .kaspa-mnemonic-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+
+    .kaspa-button-group {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .kaspa-btn {
+        width: 100%;
+    }
+
+    .kaspa-status-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .kaspa-address-display {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .kaspa-modal-content {
+        width: 95%;
+        margin: 20px;
+    }
+
+    #kaspa-entropy-canvas {
+        width: 100%;
+        max-width: 300px;
+    }
+}
+
+/* ==========================================================================
+   Print Styles
+   ========================================================================== */
+
+@media print {
+    .kaspa-wallet-setup {
+        background: white !important;
+        margin: 0 !important;
+        padding: 20px !important;
+    }
+
+    .kaspa-setup-container {
+        box-shadow: none !important;
+        border: 1px solid #ddd !important;
+    }
+
+    .kaspa-button-group,
+    .kaspa-modal,
+    .kaspa-notification {
+        display: none !important;
+    }
+
+    .kaspa-mnemonic-grid {
+        page-break-inside: avoid;
+    }
+}
+
+/* ==========================================================================
+   Accessibility
+   ========================================================================== */
+
+.kaspa-btn:focus,
+.kaspa-form-group textarea:focus,
+.kaspa-form-group input:focus {
+    outline: 2px solid #70D0F0;
+    outline-offset: 2px;
+}
+
+.kaspa-step-dot:focus {
+    outline: 2px solid #70D0F0;
+    outline-offset: 4px;
+}
+
+.kaspa-setup-option:focus {
+    outline: 2px solid #70D0F0;
+    outline-offset: 2px;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* ==========================================================================
+   Additional CSS for Real Kaspa Wallet Generation
+   ========================================================================== */
+
+.kaspa-production-notice {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    margin-top: 15px;
+    text-align: center;
+    font-size: 14px;
+    box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+}
+
+.kaspa-production-notice strong {
+    font-weight: 700;
+}
+
+/* Enhanced security warnings for real addresses */
+.kaspa-security-warning {
+    background: #fff3cd;
+    border: 2px solid #ffc107;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0;
+    text-align: center;
+    position: relative;
+}
+
+.kaspa-security-warning::before {
+    content: "⚠️";
+    font-size: 24px;
+    display: block;
+    margin-bottom: 10px;
+}
+
+.kaspa-security-warning strong {
+    color: #856404;
+    display: block;
+    font-size: 18px;
+    margin-bottom: 12px;
+    animation: pulse-warning 2s infinite;
+}
+
+@keyframes pulse-warning {
+
+    0%,
+    50%,
+    100% {
+        transform: scale(1);
+    }
+
+    25%,
+    75% {
+        transform: scale(1.02);
+    }
+}
+
+/* Real address display styling */
+.kaspa-address-display {
+    background: linear-gradient(135deg, #e8f5e8, #f0fff0);
+    border: 2px solid #28a745;
+    border-radius: 8px;
+    padding: 15px;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    word-break: break-all;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    position: relative;
+}
+
+.kaspa-address-display::before {
+    content: "🔗 REAL MAINNET";
+    position: absolute;
+    top: -8px;
+    left: 10px;
+    background: #28a745;
+    color: white;
+    font-size: 10px;
+    font-weight: bold;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Enhanced status indicators */
+.kaspa-status-active {
+    background: linear-gradient(135deg, #28a745, #20c997) !important;
+    color: white !important;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 12px;
+    display: inline-block;
+}
+
+/* Real wallet confirmation in step 4 */
+#step-4 .kaspa-success-summary {
+    background: linear-gradient(135deg, #d1e7dd, #f8fff8);
+    border: 2px solid #28a745;
+    position: relative;
+}
+
+#step-4 .kaspa-success-summary::before {
+    content: "✅ REAL KASPA MAINNET WALLET";
+    position: absolute;
+    top: -10px;
+    left: 20px;
+    background: #28a745;
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+    padding: 4px 12px;
+    border-radius: 6px;
+}
+
+/* Enhanced generate button for real addresses */
+#generate-wallet-btn {
+    background: linear-gradient(135deg, #007cba, #0056b3);
+    position: relative;
+    overflow: hidden;
+}
+
+#generate-wallet-btn::after {
+    content: "REAL ADDRESSES";
+    position: absolute;
+    top: 2px;
+    right: 8px;
+    font-size: 8px;
+    opacity: 0.8;
+    font-weight: 600;
+}
+
+#generate-wallet-btn:hover:not(:disabled) {
+    background: linear-gradient(135deg, #0056b3, #004085);
+}
+
+/* Loading state for crypto operations */
+.kaspa-crypto-loading {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.kaspa-crypto-loading::before {
+    content: "";
+    width: 16px;
+    height: 16px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #007cba;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+/* Mnemonic display for real wallets */
+.kaspa-mnemonic-word {
+    background: linear-gradient(135deg, #f8f9fa, #ffffff);
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.kaspa-mnemonic-word:hover {
+    background: linear-gradient(135deg, #e9ecef, #f8f9fa);
+    border-color: #007cba;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 123, 186, 0.2);
+}
+
+/* Import validation for real addresses */
+#kaspa-import-validation.success {
+    background: linear-gradient(135deg, #d1e7dd, #f8fff8);
+    border-color: #28a745;
+}
+
+#kaspa-import-validation.success::before {
+    content: "✅ WILL GENERATE REAL ADDRESS";
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+/* Dashboard improvements for real wallets */
+.kaspa-wallet-dashboard .kaspa-wallet-status {
+    background: linear-gradient(135deg, #f8fff8, #ffffff);
+    border: 1px solid #28a745;
+}
+
+.kaspa-wallet-dashboard .kaspa-status-value.success {
+    color: #28a745;
+    font-weight: 700;
+}
+
+/* Copy button enhancements */
+.kaspa-btn-small {
+    background: #007cba;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.kaspa-btn-small:hover {
+    background: #0056b3;
+    transform: translateY(-1px);
+}
