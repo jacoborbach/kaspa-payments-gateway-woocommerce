@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KaspaWoo - Accept Kaspa Payments in WooCommerce</title>
+    <meta name="description"
+        content="KaspaWoo is a free, non-custodial WooCommerce payment gateway for Kaspa (KAS). Accept cryptocurrency payments instantly with 0% fees.">
+    <link rel="canonical" href="https://kaspawoo.com/">
+
+    <!-- Favicons -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="apple-touch-icon" href="/icon-256x256.png">
+
+    <!-- Schema Markup for Rich Snippets -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "KaspaWoo",
+      "description": "KaspaWoo is a free, non-custodial WooCommerce payment gateway for Kaspa (KAS).",
+      "applicationCategory": "FinanceApplication",
+      "operatingSystem": "WordPress",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "5",
+        "ratingCount": "2"
+      }
+    }
+    </script>
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://kaspawoo.com/">
+    <meta property="og:title" content="KaspaWoo - Accept Kaspa Payments in WooCommerce">
+    <meta property="og:description"
+        content="The fastest, most secure way to accept KAS cryptocurrency payments. Non-custodial, automatic order confirmation, zero fees.">
+    <meta property="og:image" content="https://kaspawoo.com/og-image.jpg">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://kaspawoo.com/">
+    <meta property="twitter:title" content="KaspaWoo - Accept Kaspa Payments in WooCommerce">
+    <meta property="twitter:description"
+        content="The fastest, most secure way to accept KAS cryptocurrency payments. Non-custodial, automatic order confirmation, zero fees.">
+    <meta property="twitter:image" content="https://kaspawoo.com/og-image.jpg">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Outfit:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --kaspa-teal: #49eacb;
+            --kaspa-dark: #0a1628;
+            --kaspa-darker: #060f1c;
+            --kaspa-blue: #1a3a5c;
+            --text-primary: #ffffff;
+            --text-secondary: #8ba3c7;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--kaspa-darker);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Animated background grid */
+        .bg-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(rgba(73, 234, 203, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(73, 234, 203, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .glow-orb {
+            position: fixed;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(73, 234, 203, 0.15) 0%, transparent 70%);
+            top: -200px;
+            right: -200px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .glow-orb-2 {
+            top: auto;
+            bottom: -300px;
+            left: -200px;
+            right: auto;
+            background: radial-gradient(circle, rgba(73, 234, 203, 0.08) 0%, transparent 70%);
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            background: rgba(6, 15, 28, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(73, 234, 203, 0.1);
+        }
+
+        .logo {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--kaspa-teal);
+            text-decoration: none;
+            letter-spacing: -0.5px;
+        }
+
+        .logo span {
+            color: var(--text-primary);
+        }
+
+        .nav-cta {
+            background: var(--kaspa-teal);
+            color: var(--kaspa-dark);
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .nav-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(73, 234, 203, 0.3);
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .nav-github {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            padding: 0.5rem;
+            border-radius: 8px;
+            transition: color 0.2s ease, transform 0.2s ease;
+        }
+
+        .nav-github:hover {
+            color: var(--kaspa-teal);
+            transform: translateY(-2px);
+        }
+
+        .nav-github svg {
+            width: 22px;
+            height: 22px;
+        }
+
+        /* Hero Section */
+        .hero {
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 8rem 2rem 4rem;
+            z-index: 1;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(73, 234, 203, 0.1);
+            border: 1px solid rgba(73, 234, 203, 0.3);
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            color: var(--kaspa-teal);
+            margin-bottom: 2rem;
+        }
+
+        .badge::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: var(--kaspa-teal);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        h1 {
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 700;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            letter-spacing: -1px;
+        }
+
+        h1 .highlight {
+            color: var(--kaspa-teal);
+        }
+
+        .hero-subtitle {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin-bottom: 3rem;
+            font-weight: 300;
+        }
+
+        .hero-cta {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background: var(--kaspa-teal);
+            color: var(--kaspa-dark);
+            padding: 1rem 2rem;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(73, 234, 203, 0.4);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-primary);
+            padding: 1rem 2rem;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--kaspa-teal);
+            color: var(--kaspa-teal);
+        }
+
+        /* Features Section */
+        .features {
+            position: relative;
+            padding: 6rem 2rem;
+            z-index: 1;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .feature-card {
+            background: linear-gradient(135deg, rgba(26, 58, 92, 0.3) 0%, rgba(10, 22, 40, 0.5) 100%);
+            border: 1px solid rgba(73, 234, 203, 0.1);
+            border-radius: 16px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            border-color: rgba(73, 234, 203, 0.3);
+            transform: translateY(-5px);
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+        }
+
+        .feature-card p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        /* Testimonial */
+        .testimonial {
+            position: relative;
+            padding: 6rem 2rem;
+            z-index: 1;
+        }
+
+        .testimonial-card {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            background: linear-gradient(135deg, rgba(73, 234, 203, 0.05) 0%, rgba(10, 22, 40, 0.5) 100%);
+            border: 1px solid rgba(73, 234, 203, 0.2);
+            border-radius: 20px;
+            padding: 3rem;
+            text-align: center;
+        }
+
+        .testimonial-card blockquote {
+            font-size: 1.2rem;
+            font-style: italic;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            line-height: 1.8;
+        }
+
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .author-avatar {
+            width: 50px;
+            height: 50px;
+            background: var(--kaspa-teal);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: var(--kaspa-dark);
+        }
+
+        .author-info {
+            text-align: left;
+        }
+
+        .author-name {
+            font-weight: 600;
+        }
+
+        .author-title {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .stars {
+            color: #fbbf24;
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            position: relative;
+            padding: 6rem 2rem;
+            text-align: center;
+            z-index: 1;
+        }
+
+        /* FAQ Section */
+        .faq {
+            position: relative;
+            padding: 6rem 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+            z-index: 1;
+        }
+
+        .faq h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .faq-item {
+            background: rgba(26, 58, 92, 0.2);
+            border: 1px solid rgba(73, 234, 203, 0.1);
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .faq-item:hover {
+            border-color: rgba(73, 234, 203, 0.3);
+        }
+
+        .faq-question {
+            padding: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .faq-answer {
+            padding: 0 1.5rem 1.5rem;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            display: none;
+        }
+
+        .faq-item.active .faq-answer {
+            display: block;
+        }
+
+        .faq-toggle {
+            color: var(--kaspa-teal);
+            font-size: 1.2rem;
+            transition: transform 0.3s ease;
+        }
+
+        .faq-item.active .faq-toggle {
+            transform: rotate(45deg);
+        }
+
+        .cta-section h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .cta-section p {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+
+        /* Footer */
+        footer {
+            position: relative;
+            padding: 3rem 2rem;
+            text-align: center;
+            border-top: 1px solid rgba(73, 234, 203, 0.1);
+            z-index: 1;
+        }
+
+        footer p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        footer a {
+            color: var(--kaspa-teal);
+            text-decoration: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            nav {
+                padding: 1rem;
+            }
+
+            .hero {
+                padding: 6rem 1.5rem 3rem;
+            }
+
+            .features,
+            .testimonial,
+            .cta-section {
+                padding: 4rem 1.5rem;
+            }
+
+            .testimonial-card {
+                padding: 2rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-grid"></div>
+    <div class="glow-orb"></div>
+    <div class="glow-orb glow-orb-2"></div>
+
+    <nav>
+        <a href="/" class="logo">kaspa<span>woo</span></a>
+        <div class="nav-links">
+            <a href="/changelog.html" style="color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: color 0.2s;" onmouseover="this.style.color='var(--kaspa-teal)'" onmouseout="this.style.color='var(--text-secondary)'">Changelog</a>
+            <a href="https://github.com/jacoborbach/kaspa-payments-gateway-woocommerce" class="nav-github" target="_blank" rel="noopener noreferrer" aria-label="View source on GitHub">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                </svg>
+            </a>
+            <a href="https://wordpress.org/plugins/kaspa-payments-gateway-woocommerce/" class="nav-cta" target="_blank">Get
+                Plugin →</a>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="badge">Free & Open Source</div>
+        <h1>Accept <span class="highlight">Kaspa</span> payments<br>in WooCommerce</h1>
+        <p class="hero-subtitle">The fastest, most secure way to accept KAS cryptocurrency payments. Non-custodial,
+            automatic order confirmation, zero fees.</p>
+        <div class="hero-cta">
+            <a href="https://wordpress.org/plugins/kaspa-payments-gateway-woocommerce/" class="btn-primary"
+                target="_blank">
+                <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                    <path
+                        d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8z" />
+                    <path d="M13 7h-2v5.414l3.293 3.293 1.414-1.414L13 11.586z" />
+                </svg>
+                Download Free
+            </a>
+            <a href="#features" class="btn-secondary">Learn More</a>
+        </div>
+    </section>
+
+    <section class="features" id="features">
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon" aria-hidden="true">🔐</div>
+                <h3>Non-Custodial</h3>
+                <p>Uses KPUB watch-only wallets. Your private keys never leave your wallet. You stay in full control.
+                </p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon" aria-hidden="true">⚡</div>
+                <h3>Instant Detection</h3>
+                <p>Automatic payment verification via Kaspa blockchain. Orders complete the moment payment confirms.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon" aria-hidden="true">📱</div>
+                <h3>QR Code Payments</h3>
+                <p>Customers scan and pay instantly with Kaspium or any Kaspa wallet. No copy-paste needed.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon" aria-hidden="true">💱</div>
+                <h3>Live Exchange Rates</h3>
+                <p>Real-time USD to KAS conversion. Prices update automatically so you always get the right amount.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon" aria-hidden="true">🏷️</div>
+                <h3>Unique Addresses</h3>
+                <p>Each order gets its own payment address derived from your KPUB. Easy tracking, no confusion.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon" aria-hidden="true">🛒</div>
+                <h3>Full WooCommerce Support</h3>
+                <p>Works with classic and block checkout. Seamless integration with your existing store.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="testimonial">
+        <div class="features-grid">
+            <div class="testimonial-card">
+                <div class="stars">★★★★★</div>
+                <blockquote>"I have been fumbling for a while to build an ecommerce site where customers can pay with
+                    Kaspa. Recently I found this plugin and voila! We have a solid and secure payment processing
+                    application. I really could not be more happy."</blockquote>
+                <div class="testimonial-author">
+                    <div class="author-avatar">T</div>
+                    <div class="author-info">
+                        <div class="author-name">toneloki</div>
+                        <div class="author-title">WordPress.org Review</div>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial-card">
+                <div class="stars">★★★★★</div>
+                <blockquote>"A much needed plugin for all online Kaspians! Great for Kaspa Merchants!"</blockquote>
+                <div class="testimonial-author">
+                    <div class="author-avatar">R</div>
+                    <div class="author-info">
+                        <div class="author-name">rhubarbmedia</div>
+                        <div class="author-title">WordPress.org Review</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="faq" id="faq">
+        <h2>Common Questions</h2>
+        <div class="faq-item">
+            <div class="faq-question">
+                Is this a custodial service?
+                <span class="faq-toggle">+</span>
+            </div>
+            <div class="faq-answer">
+                No. KaspaWoo is 100% non-custodial. Your private keys never leave your wallet. Payments go directly from
+                the customer's wallet to your own Kaspa address.
+            </div>
+        </div>
+        <div class="faq-item">
+            <div class="faq-question">
+                What are the fees?
+                <span class="faq-toggle">+</span>
+            </div>
+            <div class="faq-answer">
+                There are zero fees from KaspaWoo. You only pay the standard Kaspa network transaction fees, which are
+                typically less than a fraction of a cent.
+            </div>
+        </div>
+        <div class="faq-item">
+            <div class="faq-question">
+                Which wallets are supported?
+                <span class="faq-toggle">+</span>
+            </div>
+            <div class="faq-answer">
+                Any Kaspa wallet that allows you to export an Extended Public Key (KPUB/XPUB) is supported. This includes
+                popular wallets like Kaspium and the Kaspa Web Wallet.
+            </div>
+        </div>
+        <div class="faq-item">
+            <div class="faq-question">
+                How long does it take to set up?
+                <span class="faq-toggle">+</span>
+            </div>
+            <div class="faq-answer">
+                Setup takes less than 5 minutes. Simply install the plugin, import your KPUB, and you're ready to start
+                accepting KAS on your WooCommerce store.
+            </div>
+        </div>
+        <div class="faq-item">
+            <div class="faq-question">
+                Is it secure?
+                <span class="faq-toggle">+</span>
+            </div>
+            <div class="faq-answer">
+                Yes. By using a "watch-only" wallet (KPUB), your website can generate new receiving addresses but
+                cannot spend your funds. Even if your store is compromised, your funds remain safe in your cold wallet.
+            </div>
+        </div>
+    </section>
+
+    <section class="cta-section">
+        <h2>Ready to accept Kaspa?</h2>
+        <p>Install in under 5 minutes. No API keys, no merchant accounts, no fees.</p>
+        <a href="https://wordpress.org/plugins/kaspa-payments-gateway-woocommerce/" class="btn-primary"
+            target="_blank">Install Free Plugin →</a>
+    </section>
+
+    <footer>
+        <p>Built with <span aria-label="love">💚</span> for the Kaspa community · <a
+                href="https://wordpress.org/plugins/kaspa-payments-gateway-woocommerce/">WordPress.org</a> · <a
+                href="https://github.com/jacoborbach/kaspa-payments-gateway-woocommerce" target="_blank" rel="noopener noreferrer" aria-label="Source code on GitHub" style="display: inline-flex; align-items: center; gap: 0.35rem;"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: middle;"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>GitHub</a></p>
+        <p style="margin-top: 1rem; font-size: 0.85rem;">
+            <span style="opacity: 0.7;">Support the developer:</span>
+            <a href="https://app.knsdomains.org/asset/be2d54b2cbf605631a5b41f9d09d2b236e32f05cb2c16ff1c9af5d25bfe0a129i0"
+                target="_blank" style="text-decoration: none;">
+                <code
+                    style="background: rgba(73, 234, 203, 0.15); padding: 0.25rem 0.5rem; border-radius: 4px; font-family: 'JetBrains Mono', monospace; color: var(--kaspa-teal); transition: all 0.2s ease;">kaspawoo.kas</code>
+            </a>
+        </p>
+        <p style="margin-top: 0.75rem; font-size: 0.85rem; opacity: 0.8;">
+            More from the maker: <a href="https://thechatwidget.com/" target="_blank" style="color: var(--text-primary); text-decoration: underline; text-decoration-color: rgba(255,255,255,0.3); text-underline-offset: 3px;">The Chat Widget</a> · <a href="https://gmailytics.com/" target="_blank" style="color: var(--text-primary); text-decoration: underline; text-decoration-color: rgba(255,255,255,0.3); text-underline-offset: 3px;">Gmailytics</a> · <a href="https://github.com/jacoborbach/kaspa-simple-wallet" target="_blank" style="color: var(--text-primary); text-decoration: underline; text-decoration-color: rgba(255,255,255,0.3); text-underline-offset: 3px;">Kaspa Wallet SDK</a>
+        </p>
+        <p style="margin-top: 1.5rem; font-size: 0.8rem; opacity: 0.6;">Not affiliated with Kaspa, WooCommerce, or
+            Automattic. Independent third-party plugin. · <a href="/privacy.html" style="opacity: 0.8;">Privacy Policy</a></p>
+    </footer>
+
+    <!-- The Chat Widget -->
+    <script src="https://api.thechatwidget.com/widget.js?v=7" data-site="cl1f056d53aac24f16b3e5af64" defer></script>
+
+    <script>
+        document.querySelectorAll('.faq-question').forEach(question => {
+            question.addEventListener('click', () => {
+                const item = question.parentElement;
+                item.classList.toggle('active');
+                
+                // Close other items
+                document.querySelectorAll('.faq-item').forEach(otherItem => {
+                    if (otherItem !== item) {
+                        otherItem.classList.remove('active');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Changelog - KaspaWoo</title>
+    <meta name="description" content="Stay up to date with the latest features and improvements to KaspaWoo.">
+    
+    <!-- Favicons -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --kaspa-teal: #49eacb;
+            --kaspa-dark: #0a1628;
+            --kaspa-darker: #060f1c;
+            --kaspa-blue: #1a3a5c;
+            --text-primary: #ffffff;
+            --text-secondary: #8ba3c7;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--kaspa-darker);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .bg-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(rgba(73, 234, 203, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(73, 234, 203, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .glow-orb {
+            position: fixed;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(73, 234, 203, 0.1) 0%, transparent 70%);
+            top: -200px;
+            right: -200px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            background: rgba(6, 15, 28, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(73, 234, 203, 0.1);
+        }
+
+        .logo {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--kaspa-teal);
+            text-decoration: none;
+            letter-spacing: -0.5px;
+        }
+
+        .logo span {
+            color: var(--text-primary);
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 120px auto 60px;
+            padding: 0 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 3rem;
+            color: var(--text-primary);
+        }
+
+        .version-block {
+            margin-bottom: 4rem;
+            padding: 2rem;
+            background: rgba(26, 58, 92, 0.2);
+            border: 1px solid rgba(73, 234, 203, 0.1);
+            border-radius: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .version-block:hover {
+            border-color: rgba(73, 234, 203, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .version-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .version-number {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--kaspa-teal);
+        }
+
+        .version-date {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .version-list {
+            list-style: none;
+        }
+
+        .version-list li {
+            margin-bottom: 0.75rem;
+            padding-left: 1.5rem;
+            position: relative;
+            color: var(--text-secondary);
+        }
+
+        .version-list li::before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: var(--kaspa-teal);
+        }
+
+        .version-list li strong {
+            color: var(--text-primary);
+            font-weight: 600;
+            margin-right: 0.5rem;
+        }
+
+        footer {
+            padding: 3rem 2rem;
+            text-align: center;
+            border-top: 1px solid rgba(73, 234, 203, 0.1);
+            position: relative;
+            z-index: 1;
+        }
+
+        footer a {
+            color: var(--kaspa-teal);
+            text-decoration: none;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            margin-bottom: 2rem;
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+
+        .back-link:hover {
+            color: var(--kaspa-teal);
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 2.5rem; }
+            .container { margin-top: 100px; }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-grid"></div>
+    <div class="glow-orb"></div>
+
+    <nav>
+        <a href="/" class="logo">kaspa<span>woo</span></a>
+        <a href="/" style="color: var(--text-secondary); text-decoration: none; font-weight: 500;">Back to Home</a>
+    </nav>
+
+    <main class="container">
+        <a href="/" class="back-link">← Back to Home</a>
+        <h1>Changelog</h1>
+
+        <!-- Version 1.0.5 -->
+        <div class="version-block">
+            <div class="version-header">
+                <span class="version-number">v1.0.5</span>
+                <span class="version-date">January 29, 2026</span>
+            </div>
+            <ul class="version-list">
+                <li><strong>Added</strong> Configurable exchange rate source order (1st, 2nd, 3rd choice).</li>
+                <li><strong>Added</strong> Support for 8 price sources: Kaspa API, CoinGecko, CryptoCompare, MEXC, KuCoin, Gate.io, HTX, CoinEx.</li>
+                <li><strong>Changed</strong> Rate fetch tries selected sources in order with 5-minute cache.</li>
+                <li><strong>Improved</strong> UI cleanup and better responsiveness for dashboard and checkout.</li>
+                <li><strong>Improved</strong> Documentation for external services and privacy disclosure.</li>
+            </ul>
+        </div>
+
+        <!-- Version 1.0.4 -->
+        <div class="version-block">
+            <div class="version-header">
+                <span class="version-number">v1.0.4</span>
+            </div>
+            <ul class="version-list">
+                <li><strong>Added</strong> CryptoCompare fallback when CoinGecko is unavailable.</li>
+                <li><strong>Added</strong> Dismissible "Leave a review" notice on Kaspa admin pages.</li>
+                <li><strong>Changed</strong> Rate fetch fails safely if all APIs fail.</li>
+            </ul>
+        </div>
+
+        <!-- Version 1.0.3 -->
+        <div class="version-block">
+            <div class="version-header">
+                <span class="version-number">v1.0.3</span>
+            </div>
+            <ul class="version-list">
+                <li><strong>Fixed</strong> Payment page rewrite rules on fresh installs.</li>
+                <li><strong>Fixed</strong> Wallet status detection when KPUB is set.</li>
+                <li><strong>Fixed</strong> Reconfigure wallet reset flow and cache behavior.</li>
+                <li><strong>Added</strong> Admin quick actions links.</li>
+            </ul>
+        </div>
+
+        <!-- Version 1.0.0 -->
+        <div class="version-block">
+            <div class="version-header">
+                <span class="version-number">v1.0.0</span>
+            </div>
+            <ul class="version-list">
+                <li><strong>Initial Release</strong> Full support for KPUB watch-only wallets, real-time payment detection, and automated WooCommerce order completion.</li>
+            </ul>
+        </div>
+    </main>
+
+    <footer>
+        <p>Built with 💚 for the Kaspa community · <a href="/">KaspaWoo Home</a></p>
+    </footer>
+</body>
+
+</html>

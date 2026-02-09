@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy | KaspaWoo</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --kaspa-teal: #49eacb;
+            --kaspa-dark: #0a1628;
+            --kaspa-darker: #060f1c;
+            --text-primary: #ffffff;
+            --text-secondary: #8ba3c7;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--kaspa-darker);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 4rem 2rem;
+        }
+
+        .bg-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(rgba(73, 234, 203, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(73, 234, 203, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            position: relative;
+            max-width: 800px;
+            margin: 0 auto;
+            z-index: 1;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            color: var(--kaspa-teal);
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            margin: 2rem 0 1rem;
+        }
+
+        p {
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 2rem;
+            color: var(--kaspa-teal);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        footer {
+            margin-top: 4rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(73, 234, 203, 0.1);
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-grid"></div>
+    <div class="container">
+        <a href="/" class="back-link">← Back to Home</a>
+        <h1>Privacy Policy</h1>
+        
+        <p>Last updated: January 30, 2026</p>
+
+        <h2>1. Overview</h2>
+        <p>KaspaWoo is a non-custodial software solution for WordPress/WooCommerce. We believe in privacy and security by design.</p>
+
+        <h2>2. Data Collection</h2>
+        <p><strong>Private Keys:</strong> The KaspaWoo plugin does NOT collect, store, or transmit your private keys. Your keys stay in your wallet application.</p>
+        <p><strong>Transaction Data:</strong> All transaction monitoring happens on the public Kaspa blockchain. KaspaWoo does not store your customers' personal information on any external servers; all data remains within your own WordPress database.</p>
+        <p><strong>Website Analytics:</strong> This landing page may use minimal analytics to improve the user experience, but we do not track or sell individual user data.</p>
+
+        <h2>3. Non-Custodial Nature</h2>
+        <p>Because KaspaWoo uses watch-only (KPUB) technology, it is physically impossible for the software to spend your funds. You are the sole custodian of your cryptocurrency.</p>
+
+        <h2>4. Third-Party Services</h2>
+        <p>The plugin may interact with public Kaspa nodes or the CoinGecko API to fetch exchange rates. These services have their own privacy policies.</p>
+
+        <footer>
+            &copy; 2026 KaspaWoo. Independent third-party software.
+        </footer>
+    </div>
+</body>
+
+</html>
