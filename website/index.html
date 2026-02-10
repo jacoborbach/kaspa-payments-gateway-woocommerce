@@ -185,6 +185,54 @@
             height: 22px;
         }
 
+        .nav-link-changelog {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+        .nav-link-changelog:hover {
+            color: var(--kaspa-teal);
+        }
+
+        /* Hamburger - hidden on desktop */
+        .nav-toggle {
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            gap: 5px;
+            width: 44px;
+            height: 44px;
+            padding: 10px;
+            background: transparent;
+            border: 1px solid rgba(73, 234, 203, 0.3);
+            border-radius: 8px;
+            cursor: pointer;
+            color: var(--kaspa-teal);
+            transition: all 0.2s ease;
+        }
+        .nav-toggle:hover {
+            background: rgba(73, 234, 203, 0.1);
+        }
+        .nav-toggle span {
+            display: block;
+            width: 20px;
+            height: 2px;
+            background: currentColor;
+            border-radius: 1px;
+            transition: transform 0.25s ease, opacity 0.25s ease;
+        }
+        nav.nav-open .nav-toggle span:nth-child(1) {
+            transform: translateY(7px) rotate(45deg);
+        }
+        nav.nav-open .nav-toggle span:nth-child(2) {
+            opacity: 0;
+        }
+        nav.nav-open .nav-toggle span:nth-child(3) {
+            transform: translateY(-7px) rotate(-45deg);
+        }
+
         /* Hero Section */
         .hero {
             position: relative;
@@ -337,6 +385,63 @@
         .feature-card p {
             color: var(--text-secondary);
             font-size: 0.95rem;
+        }
+
+        /* Screenshots */
+        .screenshots {
+            position: relative;
+            padding: 6rem 2rem;
+            z-index: 1;
+        }
+        .screenshots h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        .screenshots > p {
+            text-align: center;
+            color: var(--text-secondary);
+            max-width: 560px;
+            margin: 0 auto 3rem;
+            font-size: 1.05rem;
+        }
+        .screenshots-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .screenshot-card {
+            background: linear-gradient(135deg, rgba(26, 58, 92, 0.3) 0%, rgba(10, 22, 40, 0.5) 100%);
+            border: 1px solid rgba(73, 234, 203, 0.15);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: border-color 0.3s ease, transform 0.3s ease;
+        }
+        .screenshot-card:hover {
+            border-color: rgba(73, 234, 203, 0.35);
+            transform: translateY(-4px);
+        }
+        .screenshot-card img {
+            width: 100%;
+            height: auto;
+            display: block;
+            background: #0a1628;
+        }
+        .screenshot-card figcaption {
+            padding: 1rem 1.25rem;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+        @media (max-width: 768px) {
+            .screenshots-grid {
+                grid-template-columns: 1fr;
+                gap: 1.25rem;
+            }
+            .screenshots { padding: 4rem 1.5rem; }
+            .screenshots h2 { font-size: 2rem; }
         }
 
         /* Testimonial */
@@ -501,10 +606,55 @@
             text-decoration: none;
         }
 
-        /* Responsive */
+        /* Responsive - mobile nav */
         @media (max-width: 768px) {
             nav {
-                padding: 1rem;
+                padding: 1.1rem 1rem;
+                min-height: 56px;
+            }
+
+            .nav-toggle {
+                display: flex;
+            }
+
+            .nav-links {
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                flex-direction: column;
+                gap: 0;
+                padding: 0.5rem 1rem 1rem;
+                background: rgba(6, 15, 28, 0.98);
+                backdrop-filter: blur(20px);
+                border-bottom: 1px solid rgba(73, 234, 203, 0.15);
+                max-height: 0;
+                overflow: hidden;
+                opacity: 0;
+                transition: max-height 0.3s ease, opacity 0.2s ease;
+            }
+
+            nav.nav-open .nav-links {
+                max-height: 280px;
+                opacity: 1;
+            }
+
+            .nav-links a {
+                display: block;
+                padding: 0.85rem 0.75rem;
+                border-radius: 8px;
+                font-size: 1rem;
+            }
+            .nav-links a:hover {
+                background: rgba(73, 234, 203, 0.08);
+            }
+            .nav-cta {
+                text-align: center;
+                margin-top: 0.25rem;
+            }
+            .nav-github {
+                justify-content: flex-start;
+                padding: 0.85rem 0.75rem;
             }
 
             .hero {
@@ -521,6 +671,17 @@
                 padding: 2rem;
             }
         }
+
+        /* Extra small phones - keep header thick, less horizontal padding */
+        @media (max-width: 380px) {
+            nav {
+                padding: 1rem 0.75rem;
+                min-height: 52px;
+            }
+            .logo {
+                font-size: 1.25rem;
+            }
+        }
     </style>
 </head>
 
@@ -529,10 +690,13 @@
     <div class="glow-orb"></div>
     <div class="glow-orb glow-orb-2"></div>
 
-    <nav>
+    <nav id="main-nav" role="navigation">
         <a href="/" class="logo">kaspa<span>woo</span></a>
+        <button type="button" class="nav-toggle" aria-label="Open menu" aria-expanded="false" id="nav-toggle">
+            <span></span><span></span><span></span>
+        </button>
         <div class="nav-links">
-            <a href="/changelog.html" style="color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: color 0.2s;" onmouseover="this.style.color='var(--kaspa-teal)'" onmouseout="this.style.color='var(--text-secondary)'">Changelog</a>
+            <a href="/changelog.html" class="nav-link-changelog">Changelog</a>
             <a href="https://github.com/jacoborbach/kaspa-payments-gateway-woocommerce" class="nav-github" target="_blank" rel="noopener noreferrer" aria-label="View source on GitHub">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                     <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
@@ -595,6 +759,29 @@
                 <h3>Full WooCommerce Support</h3>
                 <p>Works with classic and block checkout. Seamless integration with your existing store.</p>
             </div>
+        </div>
+    </section>
+
+    <section class="screenshots" id="screenshots">
+        <h2>See it in action</h2>
+        <p>Dashboard, checkout, and wallet setup—everything you need to accept Kaspa in minutes.</p>
+        <div class="screenshots-grid">
+            <figure class="screenshot-card">
+                <img src="/screenshots/kaspawoo-dashboard-stats.png" alt="KaspaWoo WooCommerce plugin dashboard: total KAS sales, orders, success rate, and recent Kaspa payments" width="800" height="450" loading="lazy">
+                <figcaption>Dashboard with Total Sales, Total Orders, Success Rate, and Recent Orders</figcaption>
+            </figure>
+            <figure class="screenshot-card">
+                <img src="/screenshots/kaspawoo-checkout-qr-payment.png" alt="Kaspa payment checkout page: QR code and Kaspa address for sending KAS cryptocurrency" width="800" height="450" loading="lazy">
+                <figcaption>Customer payment page with QR code, address, and amount to send</figcaption>
+            </figure>
+            <figure class="screenshot-card">
+                <img src="/screenshots/kaspawoo-wallet-active-kpub.png" alt="KaspaWoo wallet active: KPUB watch-only setup for non-custodial KAS payments" width="800" height="450" loading="lazy">
+                <figcaption>Wallet active – KPUB watch-only status and benefits</figcaption>
+            </figure>
+            <figure class="screenshot-card">
+                <img src="/screenshots/kaspawoo-wallet-setup-kpub.png" alt="KaspaWoo wallet setup: import Extended Public Key (KPUB) for secure Kaspa payments" width="800" height="450" loading="lazy">
+                <figcaption>Wallet setup – Import Extended Public Key (KPUB)</figcaption>
+            </figure>
         </div>
     </section>
 
@@ -711,6 +898,19 @@
     <script src="https://api.thechatwidget.com/widget.js?v=7" data-site="cl1f056d53aac24f16b3e5af64" defer></script>
 
     <script>
+        (function() {
+            var nav = document.getElementById('main-nav');
+            var toggle = document.getElementById('nav-toggle');
+            if (!nav || !toggle) return;
+            toggle.addEventListener('click', function() {
+                var open = nav.classList.toggle('nav-open');
+                toggle.setAttribute('aria-expanded', open);
+                toggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+            });
+            document.querySelectorAll('.nav-links a').forEach(function(link) {
+                link.addEventListener('click', function() { nav.classList.remove('nav-open'); toggle.setAttribute('aria-expanded', 'false'); toggle.setAttribute('aria-label', 'Open menu'); });
+            });
+        })();
         document.querySelectorAll('.faq-question').forEach(question => {
             question.addEventListener('click', () => {
                 const item = question.parentElement;
