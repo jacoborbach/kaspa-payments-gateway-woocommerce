@@ -46,6 +46,8 @@ This plugin connects to the following third-party services:
 
 **QR Server API (api.qrserver.com)** – Generates QR codes for payment addresses. Sends address and amount only. ([Terms](https://goqr.me/api/terms-of-service/) | [Privacy](https://goqr.me/api/privacy-policy/))
 
+Learn more at [kaspawoo.com](https://kaspawoo.com).
+
 == Installation ==
 
 1. Upload the plugin files to `/wp-content/plugins/kaspa-payments-gateway-woocommerce/`
