@@ -364,7 +364,7 @@ function kasppaga_enqueue_checkout_assets($gateway_instance, $order_id, $expecte
         'kaspa-checkout-script',
         plugin_dir_url(__DIR__) . 'assets/kaspa-checkout.js',
         array(),
-        '2.0.0',
+        '2.5.0',
         true
     );
 
@@ -601,8 +601,36 @@ function kasppaga_get_live_price()
     }
 }
 
-// Payment checking is handled by the transaction polling system
-// No duplicate AJAX handler needed here
+// Lightweight order status check — DB read only, no Kaspa API call.
+// Used by fast polling after KasWare payment to avoid slow API round-trips.
+add_action('wp_ajax_kasppaga_order_status', 'kasppaga_check_order_status');
+add_action('wp_ajax_nopriv_kasppaga_order_status', 'kasppaga_check_order_status');
+
+function kasppaga_check_order_status()
+{
+    if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'kasppaga_kasware_confirm')) {
+        wp_send_json_error('Invalid nonce');
+        return;
+    }
+
+    $order_id = isset($_POST['order_id']) ? intval(sanitize_text_field(wp_unslash($_POST['order_id']))) : 0;
+    if (!$order_id) {
+        wp_send_json_error('Missing order ID');
+        return;
+    }
+
+    $order = wc_get_order($order_id);
+    if (!$order || $order->get_payment_method() !== 'kaspa') {
+        wp_send_json_error('Invalid order');
+        return;
+    }
+
+    if (in_array($order->get_status(), array('processing', 'completed'))) {
+        wp_send_json_success(array('status' => 'completed'));
+    } else {
+        wp_send_json_success(array('status' => 'pending'));
+    }
+}
 
 // AJAX handler for KasWare browser wallet payment confirmation
 add_action('wp_ajax_kasppaga_kasware_confirm', 'kasppaga_kasware_confirm_payment');

@@ -64,6 +64,19 @@
         const btn = document.getElementById('kaspa-kasware-btn');
         if (btn) {
             btn.addEventListener('click', handleKasWarePay);
+
+            // Disable button until address is ready
+            if (!getPaymentAddress()) {
+                btn.disabled = true;
+                btn.textContent = 'Waiting for address...';
+                const addressPoll = setInterval(function () {
+                    if (getPaymentAddress()) {
+                        clearInterval(addressPoll);
+                        btn.disabled = false;
+                        btn.textContent = 'Pay ' + expectedAmount + ' KAS with KasWare';
+                    }
+                }, 500);
+            }
         }
     }
 
@@ -128,13 +141,26 @@
             btn.textContent = 'Confirm in KasWare...';
             if (statusEl) statusEl.textContent = 'Please confirm the transaction in the KasWare popup.';
 
-            var txid = await window.kasware.sendKaspa(address, sompiAmount, { priorityFee: 0 });
+            var txResult = await window.kasware.sendKaspa(address, sompiAmount, { priorityFee: 0 });
 
-            if (!txid || typeof txid !== 'string' || txid.length < 10) {
+            // KasWare may return a JSON string of the full tx, an object, or just the txid
+            var txid;
+            if (typeof txResult === 'string') {
+                try {
+                    var parsed = JSON.parse(txResult);
+                    txid = parsed.id || txResult;
+                } catch (e) {
+                    txid = txResult;
+                }
+            } else if (txResult && typeof txResult === 'object' && txResult.id) {
+                txid = txResult.id;
+            }
+
+            if (!txid || typeof txid !== 'string' || !/^[a-f0-9]{64}$/i.test(txid)) {
                 throw new Error('Invalid transaction ID returned from KasWare');
             }
 
-            // Step 3: Payment sent — confirm with server
+            // Step 3: Payment sent — start fast verification
             kaswareTxid = txid;
             btn.className = 'kaspa-kasware-btn success';
             btn.textContent = 'Payment sent!';
@@ -143,12 +169,15 @@
                 statusEl.innerHTML = '<span class="kaspa-kasware-spinner"></span> Verifying on blockchain...';
             }
 
-            // Stop polling — we have the txid
+            // Stop any existing polling
             stopPaymentChecking();
-            updatePaymentStatus('Payment sent via KasWare. Verifying on blockchain...', 'checking');
+            updatePaymentStatus('Payment sent! Confirming on blockchain...', 'checking');
 
-            // Notify server and verify
-            confirmKasWarePayment(txid);
+            // Notify server of txid (fire-and-forget, don't wait)
+            notifyServerTxid(txid);
+
+            // Start fast 1s polling immediately — don't wait for server response
+            startFastPaymentPolling();
 
         } catch (err) {
             kaswarePaymentInProgress = false;
@@ -162,74 +191,70 @@
                 if (statusEl) statusEl.textContent = 'Transaction cancelled. Click to try again.';
             } else if (errorMsg.toLowerCase().includes('insufficient')) {
                 if (statusEl) statusEl.textContent = 'Insufficient funds in your KasWare wallet.';
+            } else if (errorMsg.toLowerCase().includes('storage mass')) {
+                if (statusEl) statusEl.textContent = 'Wallet has too many small UTXOs. Send your full balance to yourself in KasWare to consolidate, then try again.';
             } else {
                 if (statusEl) statusEl.textContent = 'Error: ' + errorMsg;
             }
         }
     }
 
-    function confirmKasWarePayment(txid) {
+    // Track whether the server has confirmed the order yet
+    var serverVerified = false;
+
+    /**
+     * Notify server of the KasWare txid. If the Kaspa API hasn't indexed the tx
+     * yet, it retries up to 5 times at 1s intervals until verification succeeds.
+     */
+    function notifyServerTxid(txid, attempt) {
+        attempt = attempt || 1;
+        var maxAttempts = 5;
+
         var xhr = new XMLHttpRequest();
         xhr.open('POST', ajaxUrl, true);
         xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-
         xhr.onreadystatechange = function () {
             if (xhr.readyState === 4) {
                 if (xhr.status === 200) {
                     try {
                         var response = JSON.parse(xhr.responseText);
                         if (response.success && response.data.status === 'completed') {
-                            // Verified on-chain — order confirmed
+                            serverVerified = true;
                             handlePaymentConfirmed({ txid: txid, status: 'completed' });
-                        } else if (response.success && response.data.status === 'pending_verification') {
-                            // Transaction broadcast but not yet confirmed on-chain.
-                            // Poll aggressively at 3s — Kaspa confirms in ~1s, we just
-                            // need the API to index it.
-                            updatePaymentStatus('Payment sent! Confirming on blockchain...', 'checking');
-                            var btn = document.getElementById('kaspa-kasware-btn');
-                            if (btn) {
-                                btn.className = 'kaspa-kasware-btn success';
-                                btn.textContent = 'Payment sent!';
-                            }
-                            var statusEl = document.getElementById('kaspa-kasware-status');
-                            if (statusEl) {
-                                statusEl.className = 'kaspa-kasware-status verifying';
-                                statusEl.innerHTML = '<span class="kaspa-kasware-spinner"></span> Confirming: ' + txid.substring(0, 16) + '...';
-                            }
-                            // Fast polling — 3s intervals for 30s, then fall back to normal
-                            paymentCheckActive = false;
-                            startFastPaymentPolling();
-                        } else {
-                            updatePaymentStatus('Payment sent. Waiting for blockchain confirmation...', 'checking');
-                            startPaymentMonitoring();
+                            return;
                         }
-                    } catch (e) {
-                        updatePaymentStatus('Payment sent. Waiting for blockchain confirmation...', 'checking');
-                        startPaymentMonitoring();
-                    }
-                } else {
-                    updatePaymentStatus('Payment sent. Waiting for blockchain confirmation...', 'checking');
-                    startPaymentMonitoring();
+                    } catch (e) {}
+                }
+                // Not verified yet — retry after 1s
+                if (attempt < maxAttempts && !serverVerified) {
+                    setTimeout(function () {
+                        notifyServerTxid(txid, attempt + 1);
+                    }, 1000);
                 }
             }
         };
-
         var data = 'action=kasppaga_kasware_confirm&order_id=' + orderId + '&txid=' + encodeURIComponent(txid) + '&nonce=' + kaswareNonce;
         xhr.send(data);
     }
 
     /**
-     * Fast polling after KasWare payment — 2s intervals for 20s max,
-     * uses direct txid verification for speed, then falls back to normal polling.
+     * Fast polling after KasWare payment — 1s lightweight DB checks for 15s.
+     * Runs in parallel with notify retries. Whichever confirms first wins.
      */
     function startFastPaymentPolling() {
         var fastPollCount = 0;
-        var maxFastPolls = 10; // 10 polls x 2s = 20 seconds
+        var maxFastPolls = 15;
 
         paymentCheckActive = true;
-        fastCheckTxid(); // Check immediately
+        fastCheckTxid();
 
         paymentCheckInterval = setInterval(function () {
+            if (serverVerified) {
+                clearInterval(paymentCheckInterval);
+                paymentCheckInterval = null;
+                paymentCheckActive = false;
+                return;
+            }
             fastPollCount++;
             if (fastPollCount >= maxFastPolls) {
                 clearInterval(paymentCheckInterval);
@@ -239,19 +264,14 @@
                 return;
             }
             fastCheckTxid();
-        }, 2000);
+        }, 1000);
     }
 
     /**
-     * Fast txid verification — retries the direct txid lookup instead of
-     * scanning address balance. Much faster for KasWare payments.
+     * Lightweight order status check — just reads DB, no Kaspa API call.
      */
     function fastCheckTxid() {
-        if (!kaswareTxid) {
-            checkPaymentStatus();
-            return;
-        }
-
+        if (serverVerified) return;
         var xhr = new XMLHttpRequest();
         xhr.open('POST', ajaxUrl, true);
         xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
@@ -260,13 +280,13 @@
                 try {
                     var response = JSON.parse(xhr.responseText);
                     if (response.success && response.data.status === 'completed') {
-                        handlePaymentConfirmed({ txid: kaswareTxid, status: 'completed' });
+                        serverVerified = true;
+                        handlePaymentConfirmed({ txid: kaswareTxid || '', status: 'completed' });
                     }
-                    // If still pending, do nothing — next poll will retry
                 } catch (e) {}
             }
         };
-        var data = 'action=kasppaga_kasware_confirm&order_id=' + orderId + '&txid=' + encodeURIComponent(kaswareTxid) + '&nonce=' + kaswareNonce;
+        var data = 'action=kasppaga_order_status&order_id=' + orderId + '&nonce=' + kaswareNonce;
         xhr.send(data);
     }
 
@@ -307,9 +327,9 @@
         // Update status message
         updatePaymentStatus('🔄 Monitoring for payment...', 'checking');
 
-        // Check immediately (after the 15 second delay), then every 15 seconds
+        // Check immediately (after the 15 second delay), then every 5 seconds
         checkPaymentStatus();
-        paymentCheckInterval = setInterval(checkPaymentStatus, 15000);
+        paymentCheckInterval = setInterval(checkPaymentStatus, 5000);
 
         // Stop after 30 minutes
         setTimeout(function () {
