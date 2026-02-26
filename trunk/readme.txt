@@ -3,7 +3,7 @@ Contributors: jacobo1
 Tags: woocommerce, kaspa, cryptocurrency, payments, blockchain
 Requires at least: 5.0
 Tested up to: 6.9.1
-Stable tag: 1.1.0
+Stable tag: 1.2.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -92,6 +92,14 @@ Yes. Addresses are generated sequentially starting from index 0, so they automat
 
 == Changelog ==
 
+= 1.2.0 =
+* Added: Multi-currency support — 45+ store currencies (EUR, GBP, CAD, etc.) via CoinGecko and CryptoCompare
+* Added: Test buttons on exchange rate settings — verify each source returns a live rate
+* Added: Settings link in sidebar and fixed plugin Settings link to go directly to gateway settings
+* Changed: Simplified to 3 reliable price sources (CoinGecko, CryptoCompare, Kaspa API) — removed 5 exchange tickers
+* Improved: Clear currency-aware labels and descriptions for non-USD stores
+* Improved: KasWare payment spinner during on-chain verification
+
 = 1.1.0 =
 * Added: KasWare browser wallet integration — auto-detects the Chrome extension, one-click payment with on-chain verification
 * Added: Direct transaction verification via Kaspa API — confirms KasWare payments in seconds instead of polling all transactions
@@ -139,6 +147,9 @@ Yes. Addresses are generated sequentially starting from index 0, so they automat
 * Classic and block checkout compatibility
 
 == Upgrade Notice ==
+
+= 1.2.0 =
+Multi-currency support for 45+ store currencies. Simplified to 3 reliable price sources with live test buttons.
 
 = 1.1.0 =
 KasWare browser wallet integration for one-click payments. Security fixes for payment address handling. Automatic order expiry with stock restoration.

@@ -13,6 +13,7 @@
     let secondsRemaining = 15;
     let paymentCheckActive = false;
     let kaswarePaymentInProgress = false;
+    let kaswareTxid = null;
 
     // Get data from WordPress
     const ajaxUrl = window.kaspaCheckoutData ? window.kaspaCheckoutData.ajaxUrl : '';
@@ -134,6 +135,7 @@
             }
 
             // Step 3: Payment sent — confirm with server
+            kaswareTxid = txid;
             btn.className = 'kaspa-kasware-btn success';
             btn.textContent = 'Payment sent!';
             if (statusEl) {
@@ -217,29 +219,55 @@
     }
 
     /**
-     * Fast polling after KasWare payment — 3s intervals for 30s max,
-     * then falls back to normal 15s polling if still not confirmed.
+     * Fast polling after KasWare payment — 2s intervals for 20s max,
+     * uses direct txid verification for speed, then falls back to normal polling.
      */
     function startFastPaymentPolling() {
         var fastPollCount = 0;
-        var maxFastPolls = 10; // 10 polls x 3s = 30 seconds
+        var maxFastPolls = 10; // 10 polls x 2s = 20 seconds
 
         paymentCheckActive = true;
-        checkPaymentStatus(); // Check immediately
+        fastCheckTxid(); // Check immediately
 
         paymentCheckInterval = setInterval(function () {
             fastPollCount++;
             if (fastPollCount >= maxFastPolls) {
-                // Switch to normal polling
                 clearInterval(paymentCheckInterval);
                 paymentCheckInterval = null;
                 paymentCheckActive = false;
-                updatePaymentStatus('Payment sent. Waiting for confirmation...', 'checking');
                 startPaymentMonitoring();
                 return;
             }
+            fastCheckTxid();
+        }, 2000);
+    }
+
+    /**
+     * Fast txid verification — retries the direct txid lookup instead of
+     * scanning address balance. Much faster for KasWare payments.
+     */
+    function fastCheckTxid() {
+        if (!kaswareTxid) {
             checkPaymentStatus();
-        }, 3000);
+            return;
+        }
+
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', ajaxUrl, true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                try {
+                    var response = JSON.parse(xhr.responseText);
+                    if (response.success && response.data.status === 'completed') {
+                        handlePaymentConfirmed({ txid: kaswareTxid, status: 'completed' });
+                    }
+                    // If still pending, do nothing — next poll will retry
+                } catch (e) {}
+            }
+        };
+        var data = 'action=kasppaga_kasware_confirm&order_id=' + orderId + '&txid=' + encodeURIComponent(kaswareTxid) + '&nonce=' + kaswareNonce;
+        xhr.send(data);
     }
 
     /**
