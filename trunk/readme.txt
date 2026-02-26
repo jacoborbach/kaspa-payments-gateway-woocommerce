@@ -3,12 +3,12 @@ Contributors: jacobo1
 Tags: woocommerce, kaspa, cryptocurrency, payments, blockchain
 Requires at least: 5.0
 Tested up to: 6.9.1
-Stable tag: 1.0.5
+Stable tag: 1.1.0
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Accept Kaspa (KAS) cryptocurrency payments in WooCommerce with automatic order confirmation and real-time verification.
+Accept Kaspa (KAS) cryptocurrency payments in WooCommerce with automatic order confirmation, real-time verification, and multi-currency support.
 
 == Description ==
 
@@ -21,7 +21,8 @@ Kaspa Payments Gateway for WooCommerce enables your WooCommerce store to accept 
 * **KPUB Watch-Only Wallet** – Secure, non-custodial payment processing. No private keys stored.
 * **Automatic Payment Detection** – Real-time payment monitoring via Kaspa API.
 * **Unique Address Per Order** – Each order gets a dedicated payment address for better tracking.
-* **Real-Time Exchange Rates** – Automatic USD to KAS conversion with 8 configurable price sources.
+* **Real-Time Exchange Rates** – Automatic fiat-to-KAS conversion supporting 45+ store currencies (USD, EUR, GBP, etc.) with 3 configurable price sources.
+* **KasWare Browser Wallet** – One-click payment via the KasWare Chrome extension (auto-detected).
 * **QR Code Support** – Easy payment scanning with QR codes.
 * **Classic & Block Checkout** – Supports both WooCommerce checkout styles.
 
@@ -38,11 +39,10 @@ This plugin connects to the following third-party services:
 
 **Kaspa API (api.kaspa.org)** – Payment verification and optional price source. Sends payment addresses only (public blockchain data). [More info](https://api.kaspa.org)
 
-**Price APIs** – Configurable sources for KAS/USD rates (no user data sent):
+**Price APIs** – Configurable sources for KAS exchange rates in your store currency (no user data sent):
 
-* CoinGecko ([Terms](https://www.coingecko.com/en/terms) | [Privacy](https://www.coingecko.com/en/privacy))
-* CryptoCompare ([Terms](https://www.cryptocompare.com/terms) | [Privacy](https://www.cryptocompare.com/privacy-policy))
-* MEXC, KuCoin, Gate.io, HTX, CoinEx – Public ticker endpoints (no API key required)
+* CoinGecko – Supports 45+ fiat currencies ([Terms](https://www.coingecko.com/en/terms) | [Privacy](https://www.coingecko.com/en/privacy))
+* CryptoCompare – Supports 45+ fiat currencies ([Terms](https://www.cryptocompare.com/terms) | [Privacy](https://www.cryptocompare.com/privacy-policy))
 
 **QR Server API (api.qrserver.com)** – Generates QR codes for payment addresses. Sends address and amount only. ([Terms](https://goqr.me/api/terms-of-service/) | [Privacy](https://goqr.me/api/privacy-policy/))
 
@@ -92,9 +92,22 @@ Yes. Addresses are generated sequentially starting from index 0, so they automat
 
 == Changelog ==
 
+= 1.1.0 =
+* Added: KasWare browser wallet integration — auto-detects the Chrome extension, one-click payment with on-chain verification
+* Added: Direct transaction verification via Kaspa API — confirms KasWare payments in seconds instead of polling all transactions
+* Added: Automatic order expiry — unpaid orders are cancelled and stock restored after timeout (respects WooCommerce "Hold stock" setting, defaults to 24 hours)
+* Added: uninstall.php — clean plugin removal per WordPress.org standards
+* Improved: Fast confirmation polling (3s intervals) after KasWare payment, falls back to standard 15s
+* Fixed: Payment address security — save endpoint now requires order key verification
+* Fixed: Address index race condition — atomic database increment prevents duplicate addresses under concurrent orders
+* Fixed: HPOS metabox compatibility — order details panel now works with WooCommerce High-Performance Order Storage
+* Fixed: Cron cleanup on plugin deactivation
+* Removed: Debug tools and console logging from production checkout
+* Removed: Mobile zoom lock that prevented accessibility
+
 = 1.0.5 =
 * Added: Configurable exchange rate source order (1st, 2nd, 3rd choice) in gateway settings
-* Added: Eight spot-only price sources: Kaspa API, CoinGecko, CryptoCompare, MEXC, KuCoin, Gate.io, HTX, CoinEx
+* Added: Three reliable price sources: CoinGecko, CryptoCompare, Kaspa API
 * Changed: Rate fetch tries selected sources in order with 5-minute cache
 * Improved: External services documentation
 
@@ -126,6 +139,9 @@ Yes. Addresses are generated sequentially starting from index 0, so they automat
 * Classic and block checkout compatibility
 
 == Upgrade Notice ==
+
+= 1.1.0 =
+KasWare browser wallet integration for one-click payments. Security fixes for payment address handling. Automatic order expiry with stock restoration.
 
 = 1.0.5 =
 Configurable price sources (1st/2nd/3rd choice) and eight spot-only APIs for exchange rates.

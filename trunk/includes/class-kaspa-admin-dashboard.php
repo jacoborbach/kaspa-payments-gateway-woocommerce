@@ -36,6 +36,25 @@ class KASPPAGA_Admin_Dashboard
             56
         );
 
+        // Remaining sub-menus registered at priority 30 so Wallet Setup (priority 20) appears first
+        add_action('admin_menu', array($this, 'add_secondary_submenus'), 30);
+    }
+
+    /**
+     * Register sub-menus that should appear after Wallet Setup
+     */
+    public function add_secondary_submenus()
+    {
+        // Sub-menu: Settings (WooCommerce gateway settings)
+        add_submenu_page(
+            'kaspa-payments-gateway',
+            'Settings',
+            'Settings',
+            'manage_woocommerce',
+            'kaspa-settings-redirect',
+            array($this, 'redirect_to_settings')
+        );
+
         // Sub-menu: Analytics
         add_submenu_page(
             'kaspa-payments-gateway',
@@ -424,6 +443,15 @@ class KASPPAGA_Admin_Dashboard
     /**
      * Help & FAQ Page
      */
+    /**
+     * Redirect to WooCommerce gateway settings page
+     */
+    public function redirect_to_settings()
+    {
+        wp_safe_redirect(admin_url('admin.php?page=wc-settings&tab=checkout&section=kaspa'));
+        exit;
+    }
+
     public function render_help_page()
     {
         ?>

@@ -503,6 +503,136 @@
     }
 }
 
+/* KasWare Wallet Button */
+.kaspa-kasware-section {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    display: none; /* Hidden by default, shown by JS when KasWare detected */
+}
+
+.kaspa-kasware-section.detected {
+    display: block;
+}
+
+.kaspa-kasware-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #49a8d4;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.kaspa-kasware-badge .kasware-dot {
+    width: 8px;
+    height: 8px;
+    background: #43a047;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.kaspa-kasware-btn {
+    background: linear-gradient(135deg, #49a8d4 0%, #2c8fc1 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 14px 32px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    width: 100%;
+    max-width: 320px;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 52px;
+}
+
+.kaspa-kasware-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(73, 168, 212, 0.4);
+}
+
+.kaspa-kasware-btn:active {
+    transform: translateY(0);
+}
+
+.kaspa-kasware-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.kaspa-kasware-btn.connecting {
+    background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+}
+
+.kaspa-kasware-btn.success {
+    background: linear-gradient(135deg, #66bb6a 0%, #43a047 100%);
+}
+
+.kaspa-kasware-btn.error {
+    background: linear-gradient(135deg, #ef5350 0%, #d32f2f 100%);
+}
+
+.kaspa-kasware-status {
+    font-size: 13px;
+    color: #666;
+    margin-top: 10px;
+    min-height: 20px;
+}
+
+.kaspa-kasware-status.verifying {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #43a047;
+    font-weight: 500;
+}
+
+.kaspa-kasware-spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(67, 160, 71, 0.3);
+    border-top-color: #43a047;
+    border-radius: 50%;
+    animation: kasware-spin 0.8s linear infinite;
+    flex-shrink: 0;
+}
+
+@keyframes kasware-spin {
+    to { transform: rotate(360deg); }
+}
+
+.kaspa-kasware-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    color: #999;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.kaspa-kasware-divider::before,
+.kaspa-kasware-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #e0e0e0;
+}
+
 /* Ensure the page doesn't exceed viewport */
 @media (max-height: 800px) {
     .kaspa-payment-container {

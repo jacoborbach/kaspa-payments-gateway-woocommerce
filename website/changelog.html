@@ -229,6 +229,27 @@
         <a href="/" class="back-link">← Back to Home</a>
         <h1>Changelog</h1>
 
+        <!-- Version 1.1.0 -->
+        <div class="version-block">
+            <div class="version-header">
+                <span class="version-number">v1.1.0</span>
+                <span class="version-date">February 26, 2026</span>
+            </div>
+            <ul class="version-list">
+                <li><strong>Added</strong> KasWare browser wallet integration — auto-detects the Chrome extension for one-click payment with on-chain verification.</li>
+                <li><strong>Added</strong> Direct transaction verification via Kaspa API — confirms KasWare payments in seconds instead of scanning all transactions.</li>
+                <li><strong>Added</strong> Automatic order expiry — unpaid orders are cancelled and stock restored after timeout (respects WooCommerce "Hold stock" setting, defaults to 24 hours).</li>
+                <li><strong>Added</strong> uninstall.php for clean plugin removal per WordPress.org standards.</li>
+                <li><strong>Improved</strong> Fast confirmation polling (3s intervals) after KasWare payment, falls back to standard 15s.</li>
+                <li><strong>Fixed</strong> Payment address security — save endpoint now requires order key verification.</li>
+                <li><strong>Fixed</strong> Address index race condition — atomic database increment prevents duplicate addresses.</li>
+                <li><strong>Fixed</strong> HPOS metabox compatibility — order details panel works with WooCommerce High-Performance Order Storage.</li>
+                <li><strong>Fixed</strong> Cron cleanup on plugin deactivation.</li>
+                <li><strong>Removed</strong> Debug tools and console logging from production checkout.</li>
+                <li><strong>Removed</strong> Mobile zoom lock that prevented accessibility.</li>
+            </ul>
+        </div>
+
         <!-- Version 1.0.5 -->
         <div class="version-block">
             <div class="version-header">

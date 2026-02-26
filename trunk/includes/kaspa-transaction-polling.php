@@ -61,6 +61,64 @@ class KASPPAGA_Transaction_Polling
     }
 
     /**
+     * Verify a specific transaction by its ID using the Kaspa API.
+     * Much faster than scanning all address transactions.
+     * Returns true if the transaction exists and is accepted.
+     */
+    public function verify_transaction_by_id($txid, $expected_address = null, $expected_amount = null)
+    {
+        if (!$txid || !preg_match('/^[a-f0-9]{64}$/i', $txid)) {
+            return false;
+        }
+
+        $url = $this->api_base_url . '/transactions/' . urlencode($txid) . '?inputs=false&outputs=true&resolve_previous_outpoints=no';
+
+        $response = wp_remote_get($url, array(
+            'timeout' => 10,
+            'headers' => array(
+                'User-Agent' => 'Kaspa-Payments-Gateway-WooCommerce/1.1',
+                'Accept' => 'application/json'
+            )
+        ));
+
+        if (is_wp_error($response)) {
+            return false;
+        }
+
+        $code = wp_remote_retrieve_response_code($response);
+        if ($code !== 200) {
+            return false;
+        }
+
+        $data = json_decode(wp_remote_retrieve_body($response), true);
+        if (!$data) {
+            return false;
+        }
+
+        // If we just need to confirm the tx exists and is accepted
+        if (!$expected_address && !$expected_amount) {
+            return !empty($data['is_accepted']);
+        }
+
+        // Verify the tx actually pays the expected address the expected amount
+        if (isset($data['outputs']) && is_array($data['outputs'])) {
+            foreach ($data['outputs'] as $output) {
+                $output_address = isset($output['script_public_key_address']) ? $output['script_public_key_address'] : '';
+                $output_amount = isset($output['amount']) ? $output['amount'] / 100000000 : 0;
+
+                $address_matches = !$expected_address || $output_address === $expected_address;
+                $amount_matches = !$expected_amount || abs($output_amount - floatval($expected_amount)) < 0.00000001;
+
+                if ($address_matches && $amount_matches) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Get balance for a Kaspa address using OFFICIAL API endpoint
      */
     public function get_kaspa_balance($address)
@@ -473,8 +531,17 @@ class KASPPAGA_Transaction_Polling
                 continue;
             }
 
-            // Skip orders older than 24 hours
-            if ($payment_started && (time() - $payment_started) > 86400) {
+            // Auto-cancel expired orders and restore stock.
+            // Respects WooCommerce's "Hold stock" setting if configured, otherwise 24 hours.
+            $hold_stock_minutes = absint(get_option('woocommerce_hold_stock_minutes', 0));
+            $expiry_seconds = $hold_stock_minutes > 0 ? $hold_stock_minutes * 60 : 86400; // default 24 hours
+
+            if ($payment_started && (time() - $payment_started) > $expiry_seconds) {
+                $order->update_status('cancelled', sprintf(
+                    'Kaspa payment not received within %s. Order auto-cancelled and stock restored.',
+                    $hold_stock_minutes > 0 ? $hold_stock_minutes . ' minutes' : '24 hours'
+                ));
+                wc_increase_stock_levels($order);
                 continue;
             }
 
@@ -531,6 +598,7 @@ class KASPPAGA_Transaction_Polling
      */
     public function add_order_metabox()
     {
+        // Legacy post-based orders
         add_meta_box(
             'kaspa-payment-details',
             'Kaspa Payment Details',
@@ -539,14 +607,29 @@ class KASPPAGA_Transaction_Polling
             'side',
             'high'
         );
+
+        // HPOS (High-Performance Order Storage) — WooCommerce 8.2+
+        add_meta_box(
+            'kaspa-payment-details',
+            'Kaspa Payment Details',
+            array($this, 'render_order_metabox'),
+            'woocommerce_page_wc-orders',
+            'side',
+            'high'
+        );
     }
 
     /**
      * Render admin metabox
      */
-    public function render_order_metabox($post)
+    public function render_order_metabox($post_or_order)
     {
-        $order = wc_get_order($post->ID);
+        // Support both legacy ($post object) and HPOS (WC_Order object)
+        if ($post_or_order instanceof WC_Order) {
+            $order = $post_or_order;
+        } else {
+            $order = wc_get_order($post_or_order->ID);
+        }
 
         if (!$order || $order->get_payment_method() !== 'kaspa') {
             echo '<p>Not a Kaspa payment.</p>';

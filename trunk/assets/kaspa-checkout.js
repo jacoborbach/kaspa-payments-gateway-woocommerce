@@ -12,21 +12,243 @@
     let paymentCheckInterval;
     let secondsRemaining = 15;
     let paymentCheckActive = false;
+    let kaswarePaymentInProgress = false;
 
     // Get data from WordPress
     const ajaxUrl = window.kaspaCheckoutData ? window.kaspaCheckoutData.ajaxUrl : '';
     const orderId = window.kaspaCheckoutData ? window.kaspaCheckoutData.orderId : 0;
     const expectedAmount = window.kaspaCheckoutData ? window.kaspaCheckoutData.expectedAmount : 0;
     const paymentNonce = window.kaspaCheckoutData ? window.kaspaCheckoutData.paymentNonce : '';
+    const kaswareNonce = window.kaspaCheckoutData ? window.kaspaCheckoutData.kaswareNonce : '';
+    const paymentAddress = window.kaspaCheckoutData ? window.kaspaCheckoutData.paymentAddress : '';
     const myAccountUrl = window.kaspaCheckoutData ? window.kaspaCheckoutData.myAccountUrl : '';
     const thankYouUrl = window.kaspaCheckoutData ? window.kaspaCheckoutData.thankYouUrl : '';
 
     // No WebSocket functions needed - using AJAX polling only
 
     /**
+     * KasWare Browser Wallet Integration
+     */
+    function detectKasWare() {
+        if (typeof window.kasware !== 'undefined') {
+            showKasWareButton();
+            return;
+        }
+
+        // KasWare may inject after DOMContentLoaded — retry a few times
+        let attempts = 0;
+        const maxAttempts = 10;
+        const interval = setInterval(function () {
+            attempts++;
+            if (typeof window.kasware !== 'undefined') {
+                clearInterval(interval);
+                showKasWareButton();
+            } else if (attempts >= maxAttempts) {
+                clearInterval(interval);
+            }
+        }, 300);
+    }
+
+    function showKasWareButton() {
+        const section = document.getElementById('kaspa-kasware-section');
+        const divider = document.getElementById('kaspa-kasware-divider');
+        if (section) {
+            section.classList.add('detected');
+        }
+        if (divider) {
+            divider.style.display = 'flex';
+        }
+
+        // Attach click handler
+        const btn = document.getElementById('kaspa-kasware-btn');
+        if (btn) {
+            btn.addEventListener('click', handleKasWarePay);
+        }
+    }
+
+    function getPaymentAddress() {
+        // First try the address display on the page (most up-to-date, set by address generation JS)
+        const addressEl = document.getElementById('kaspa-address-display');
+        if (addressEl) {
+            const text = (addressEl.textContent || '').trim();
+            if (text.startsWith('kaspa:')) {
+                return text;
+            }
+        }
+        // Fall back to the address passed from PHP
+        if (paymentAddress && paymentAddress.startsWith('kaspa:')) {
+            return paymentAddress;
+        }
+        return null;
+    }
+
+    function kasToSompi(kasAmount) {
+        // 1 KAS = 100,000,000 sompi
+        // Use string math to avoid floating point issues
+        var parts = String(kasAmount).split('.');
+        var whole = parts[0] || '0';
+        var frac = parts[1] || '';
+        // Pad or truncate to 8 decimal places
+        frac = (frac + '00000000').substring(0, 8);
+        var sompiStr = whole + frac;
+        // Remove leading zeros
+        sompiStr = sompiStr.replace(/^0+/, '') || '0';
+        return parseInt(sompiStr, 10);
+    }
+
+    async function handleKasWarePay() {
+        if (kaswarePaymentInProgress) return;
+
+        var btn = document.getElementById('kaspa-kasware-btn');
+        var statusEl = document.getElementById('kaspa-kasware-status');
+
+        // Check address is ready
+        var address = getPaymentAddress();
+        if (!address) {
+            if (statusEl) statusEl.textContent = 'Payment address is still generating. Please wait a moment and try again.';
+            return;
+        }
+
+        kaswarePaymentInProgress = true;
+        btn.disabled = true;
+        btn.className = 'kaspa-kasware-btn connecting';
+        btn.textContent = 'Connecting to KasWare...';
+        if (statusEl) statusEl.textContent = '';
+
+        try {
+            // Step 1: Connect — request account access
+            var accounts = await window.kasware.requestAccounts();
+            if (!accounts || accounts.length === 0) {
+                throw new Error('No accounts returned from KasWare');
+            }
+
+            // Step 2: Send payment
+            var sompiAmount = kasToSompi(expectedAmount);
+            btn.textContent = 'Confirm in KasWare...';
+            if (statusEl) statusEl.textContent = 'Please confirm the transaction in the KasWare popup.';
+
+            var txid = await window.kasware.sendKaspa(address, sompiAmount, { priorityFee: 0 });
+
+            if (!txid || typeof txid !== 'string' || txid.length < 10) {
+                throw new Error('Invalid transaction ID returned from KasWare');
+            }
+
+            // Step 3: Payment sent — confirm with server
+            btn.className = 'kaspa-kasware-btn success';
+            btn.textContent = 'Payment sent!';
+            if (statusEl) {
+                statusEl.className = 'kaspa-kasware-status verifying';
+                statusEl.innerHTML = '<span class="kaspa-kasware-spinner"></span> Verifying on blockchain...';
+            }
+
+            // Stop polling — we have the txid
+            stopPaymentChecking();
+            updatePaymentStatus('Payment sent via KasWare. Verifying on blockchain...', 'checking');
+
+            // Notify server and verify
+            confirmKasWarePayment(txid);
+
+        } catch (err) {
+            kaswarePaymentInProgress = false;
+            btn.disabled = false;
+            btn.className = 'kaspa-kasware-btn';
+            btn.textContent = 'Pay ' + expectedAmount + ' KAS with KasWare';
+
+            var errorMsg = err.message || String(err);
+            // User rejected the request
+            if (errorMsg.toLowerCase().includes('reject') || errorMsg.toLowerCase().includes('cancel') || errorMsg.toLowerCase().includes('denied')) {
+                if (statusEl) statusEl.textContent = 'Transaction cancelled. Click to try again.';
+            } else if (errorMsg.toLowerCase().includes('insufficient')) {
+                if (statusEl) statusEl.textContent = 'Insufficient funds in your KasWare wallet.';
+            } else {
+                if (statusEl) statusEl.textContent = 'Error: ' + errorMsg;
+            }
+        }
+    }
+
+    function confirmKasWarePayment(txid) {
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', ajaxUrl, true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    try {
+                        var response = JSON.parse(xhr.responseText);
+                        if (response.success && response.data.status === 'completed') {
+                            // Verified on-chain — order confirmed
+                            handlePaymentConfirmed({ txid: txid, status: 'completed' });
+                        } else if (response.success && response.data.status === 'pending_verification') {
+                            // Transaction broadcast but not yet confirmed on-chain.
+                            // Poll aggressively at 3s — Kaspa confirms in ~1s, we just
+                            // need the API to index it.
+                            updatePaymentStatus('Payment sent! Confirming on blockchain...', 'checking');
+                            var btn = document.getElementById('kaspa-kasware-btn');
+                            if (btn) {
+                                btn.className = 'kaspa-kasware-btn success';
+                                btn.textContent = 'Payment sent!';
+                            }
+                            var statusEl = document.getElementById('kaspa-kasware-status');
+                            if (statusEl) {
+                                statusEl.className = 'kaspa-kasware-status verifying';
+                                statusEl.innerHTML = '<span class="kaspa-kasware-spinner"></span> Confirming: ' + txid.substring(0, 16) + '...';
+                            }
+                            // Fast polling — 3s intervals for 30s, then fall back to normal
+                            paymentCheckActive = false;
+                            startFastPaymentPolling();
+                        } else {
+                            updatePaymentStatus('Payment sent. Waiting for blockchain confirmation...', 'checking');
+                            startPaymentMonitoring();
+                        }
+                    } catch (e) {
+                        updatePaymentStatus('Payment sent. Waiting for blockchain confirmation...', 'checking');
+                        startPaymentMonitoring();
+                    }
+                } else {
+                    updatePaymentStatus('Payment sent. Waiting for blockchain confirmation...', 'checking');
+                    startPaymentMonitoring();
+                }
+            }
+        };
+
+        var data = 'action=kasppaga_kasware_confirm&order_id=' + orderId + '&txid=' + encodeURIComponent(txid) + '&nonce=' + kaswareNonce;
+        xhr.send(data);
+    }
+
+    /**
+     * Fast polling after KasWare payment — 3s intervals for 30s max,
+     * then falls back to normal 15s polling if still not confirmed.
+     */
+    function startFastPaymentPolling() {
+        var fastPollCount = 0;
+        var maxFastPolls = 10; // 10 polls x 3s = 30 seconds
+
+        paymentCheckActive = true;
+        checkPaymentStatus(); // Check immediately
+
+        paymentCheckInterval = setInterval(function () {
+            fastPollCount++;
+            if (fastPollCount >= maxFastPolls) {
+                // Switch to normal polling
+                clearInterval(paymentCheckInterval);
+                paymentCheckInterval = null;
+                paymentCheckActive = false;
+                updatePaymentStatus('Payment sent. Waiting for confirmation...', 'checking');
+                startPaymentMonitoring();
+                return;
+            }
+            checkPaymentStatus();
+        }, 3000);
+    }
+
+    /**
      * Initialize the checkout system
      */
     function initializeCheckout() {
+        // Detect KasWare browser extension
+        detectKasWare();
+
         // Start price updates if price widget exists
         if (document.getElementById('kaspa-current-price')) {
             startPriceUpdates();
@@ -384,57 +606,10 @@
     }
 
     /**
-     * Debug functions (remove in production)
-     */
-    window.kaspaDebug = {
-        checkPayment: checkPaymentStatus,
-        stopMonitoring: stopPaymentChecking,
-        startMonitoring: startPaymentMonitoring,
-        updatePrice: updateKaspaPrice,
-
-        // Test function to manually confirm payment (admin only)
-        manualConfirm: function (txid = null) {
-            if (!ajaxUrl || !orderId) {
-                console.error('Missing required data for manual confirmation');
-                return;
-            }
-
-            const xhr = new XMLHttpRequest();
-            xhr.open('POST', ajaxUrl, true);
-            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-
-            xhr.onreadystatechange = function () {
-                if (xhr.readyState === 4) {
-                    if (xhr.status === 200) {
-                        try {
-                            const response = JSON.parse(xhr.responseText);
-                            console.log('Manual confirmation response:', response);
-                            if (response.success) {
-                                showNotification('✅ Payment manually confirmed', 'success');
-                                setTimeout(() => window.location.reload(), 2000);
-                            } else {
-                                showNotification('❌ Manual confirmation failed', 'error');
-                            }
-                        } catch (e) {
-                            console.error('Manual confirmation parse error:', e);
-                        }
-                    } else {
-                        console.error('Manual confirmation HTTP error:', xhr.status);
-                    }
-                }
-            };
-
-            const data = `action=kasppaga_manual_confirm&order_id=${orderId}&txid=${txid || 'test-' + Date.now()}`;
-            xhr.send(data);
-        }
-    };
-
-    /**
      * Enhanced error handling
      */
     window.addEventListener('error', function (e) {
         console.error('Kaspa Checkout Error:', e.error);
-        showNotification('❌ An error occurred. Please refresh the page.', 'error');
     });
 
     /**
@@ -442,11 +617,9 @@
      */
     document.addEventListener('visibilitychange', function () {
         if (document.hidden) {
-            console.log('⏸️ Page hidden - pausing updates');
             if (priceUpdateInterval) clearInterval(priceUpdateInterval);
             if (countdownInterval) clearInterval(countdownInterval);
         } else {
-            console.log('▶️ Page visible - resuming updates');
             if (document.getElementById('kaspa-current-price')) {
                 startPriceUpdates();
             }
@@ -457,12 +630,6 @@
      * Mobile-specific enhancements
      */
     function setupMobileEnhancements() {
-        // Prevent zoom on input focus for mobile
-        const metaViewport = document.querySelector('meta[name="viewport"]');
-        if (metaViewport && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-            metaViewport.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
-        }
-
         // Add touch feedback for copy buttons
         const copyFields = document.querySelectorAll('.kaspa-copy-field');
         copyFields.forEach(field => {
@@ -522,14 +689,5 @@
         setupMobileEnhancements();
         setupAccessibility();
     }
-
-    // Global access for debugging
-    window.kaspaCheckout = {
-        checkPayment: checkPaymentStatus,
-        copyToClipboard: window.copyToClipboard,
-        showNotification: showNotification,
-        debug: window.kaspaDebug,
-        startMonitoring: startPaymentMonitoring
-    };
 
 })();

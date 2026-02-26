@@ -134,6 +134,7 @@ function kasppaga_enqueue_address_generation_script($order_id, $is_pending = fal
 
     // Prepare data for inline script
     $order_id_js = intval($order_id);
+    $order_key_js = $order ? esc_js($order->get_order_key()) : '';
     $kpub_js = esc_js($kpub);
     $is_pending_js = $is_pending ? 'true' : 'false';
     $existing_address_js = $existing_address ? "'" . esc_js($existing_address) . "'" : 'null';
@@ -330,7 +331,7 @@ function kasppaga_enqueue_address_generation_script($order_id, $is_pending = fal
                 }
             }
         };
-        let data = 'action=kasppaga_save_order_address&order_id=' + orderId + '&address=' + encodeURIComponent(address);
+        let data = 'action=kasppaga_save_order_address&order_id=' + orderId + '&address=' + encodeURIComponent(address) + '&order_key=" . esc_js($order_key_js) . "';
         if (addressIndex !== undefined && addressIndex >= 0) {
             data += '&address_index=' + addressIndex;
         }
@@ -371,12 +372,20 @@ function kasppaga_enqueue_checkout_assets($gateway_instance, $order_id, $expecte
 
     // Pass checkout data to JavaScript
     $current_rate = $gateway_instance->get_kas_rate();
+    // Get payment address for KasWare (may be pending if not yet generated)
+    $kasware_address = $order ? $order->get_meta('_kaspa_payment_address') : '';
+    if (empty($kasware_address)) {
+        $kasware_address = $order ? $order->get_meta('_kaspa_address') : '';
+    }
+
     wp_localize_script('kaspa-checkout-script', 'kaspaCheckoutData', array(
         'ajaxUrl' => admin_url('admin-ajax.php'),
         'currentRate' => $current_rate ? (float) $current_rate : 0,
         'orderId' => $order_id ? (int) $order_id : 0,
         'expectedAmount' => $expected_amount,
         'paymentNonce' => wp_create_nonce('kasppaga_check_payment'),
+        'kaswareNonce' => wp_create_nonce('kasppaga_kasware_confirm'),
+        'paymentAddress' => $kasware_address,
         'myAccountUrl' => wc_get_page_permalink('myaccount'),
         'thankYouUrl' => $order ? $order->get_checkout_order_received_url() : '',
         'siteUrl' => get_site_url(),
@@ -399,6 +408,22 @@ function kasppaga_render_checkout_template($order_id, $expected_amount, $current
                     <small id="kaspa-last-update">Updated: <?php echo esc_html(current_time('H:i:s')); ?></small>
                 </div>
             <?php endif; ?>
+        </div>
+
+        <!-- KasWare Browser Wallet (auto-detected by JS) -->
+        <div id="kaspa-kasware-section" class="kaspa-kasware-section">
+            <div class="kaspa-kasware-badge">
+                <span class="kasware-dot"></span> KasWare Wallet Detected
+            </div>
+            <button type="button" id="kaspa-kasware-btn" class="kaspa-kasware-btn">
+                Pay <?php echo esc_html($expected_amount); ?> KAS with KasWare
+            </button>
+            <div id="kaspa-kasware-status" class="kaspa-kasware-status"></div>
+        </div>
+
+        <!-- Divider between KasWare and QR (shown only when KasWare detected) -->
+        <div id="kaspa-kasware-divider" class="kaspa-kasware-divider" style="display: none;">
+            or pay manually
         </div>
 
         <!-- Payment Methods - QR Code + Address + Amount in one compact section -->
@@ -578,6 +603,103 @@ function kasppaga_get_live_price()
 
 // Payment checking is handled by the transaction polling system
 // No duplicate AJAX handler needed here
+
+// AJAX handler for KasWare browser wallet payment confirmation
+add_action('wp_ajax_kasppaga_kasware_confirm', 'kasppaga_kasware_confirm_payment');
+add_action('wp_ajax_nopriv_kasppaga_kasware_confirm', 'kasppaga_kasware_confirm_payment');
+
+function kasppaga_kasware_confirm_payment()
+{
+    if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'kasppaga_kasware_confirm')) {
+        wp_send_json_error('Invalid nonce');
+        return;
+    }
+
+    $order_id = isset($_POST['order_id']) ? intval(sanitize_text_field(wp_unslash($_POST['order_id']))) : 0;
+    $txid = isset($_POST['txid']) ? sanitize_text_field(wp_unslash($_POST['txid'])) : '';
+
+    if (!$order_id || !$txid) {
+        wp_send_json_error('Missing order ID or transaction ID');
+        return;
+    }
+
+    // Basic txid format validation (Kaspa txids are 64-char hex strings)
+    if (!preg_match('/^[a-f0-9]{64}$/i', $txid)) {
+        wp_send_json_error('Invalid transaction ID format');
+        return;
+    }
+
+    $order = wc_get_order($order_id);
+    if (!$order || $order->get_payment_method() !== 'kaspa') {
+        wp_send_json_error('Invalid order');
+        return;
+    }
+
+    // Don't process if already confirmed
+    if (in_array($order->get_status(), array('processing', 'completed'))) {
+        wp_send_json_success(array(
+            'message' => 'Payment already confirmed',
+            'status' => 'completed'
+        ));
+        return;
+    }
+
+    $expected_amount = $order->get_meta('_kaspa_expected_amount');
+    $payment_address = $order->get_meta('_kaspa_payment_address');
+    if (empty($payment_address)) {
+        $payment_address = $order->get_meta('_kaspa_address');
+    }
+
+    // Always store the KasWare txid so polling can reference it
+    $order->update_meta_data('_kaspa_txid', $txid);
+    $order->update_meta_data('_kaspa_payment_method_used', 'kasware');
+    $order->save();
+
+    // Verify the specific transaction by ID — much faster than scanning all
+    // address transactions. Checks that the tx exists, is accepted, and pays
+    // the correct address the correct amount.
+    // If the tx hasn't propagated yet (KasWare returns txid immediately after
+    // broadcast), the faster client-side polling will catch it within seconds.
+    $verified = false;
+    try {
+        $polling = new KASPPAGA_Transaction_Polling();
+        $verified = $polling->verify_transaction_by_id($txid, $payment_address, $expected_amount);
+    } catch (Exception $e) {
+        // Verification failed — client-side polling will handle it
+    }
+
+    if ($verified) {
+        // Payment verified on-chain — mark order as processing
+        $order->update_meta_data('_kaspa_confirmed_amount', $expected_amount);
+        $order->update_meta_data('_kaspa_payment_confirmed', time());
+        $order->update_status('processing', sprintf(
+            'Kaspa payment verified on-chain via KasWare wallet. Transaction: %s',
+            $txid
+        ));
+        $order->save();
+
+        wp_send_json_success(array(
+            'message' => 'Payment confirmed',
+            'status' => 'completed',
+            'txid' => $txid
+        ));
+    } else {
+        // Transaction broadcast but not yet confirmed on-chain.
+        // The txid is stored — the cron polling system will verify the amount
+        // and complete the order once the transaction is accepted.
+        $order->add_order_note(sprintf(
+            'KasWare payment broadcast. Transaction %s awaiting blockchain confirmation.',
+            $txid
+        ));
+        $order->save();
+
+        wp_send_json_success(array(
+            'message' => 'Payment broadcast. Awaiting blockchain confirmation.',
+            'status' => 'pending_verification',
+            'txid' => $txid
+        ));
+    }
+}
 
 // Helper function to manually mark order as paid (for testing)
 add_action('wp_ajax_kasppaga_manual_confirm', 'kasppaga_manual_confirm_payment');
