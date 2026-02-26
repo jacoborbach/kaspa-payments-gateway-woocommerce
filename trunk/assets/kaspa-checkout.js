@@ -209,7 +209,6 @@
     function notifyServerTxid(txid, attempt) {
         attempt = attempt || 1;
         var maxAttempts = 5;
-
         var xhr = new XMLHttpRequest();
         xhr.open('POST', ajaxUrl, true);
         xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');

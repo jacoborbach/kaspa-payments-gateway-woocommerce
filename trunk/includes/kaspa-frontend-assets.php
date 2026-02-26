@@ -282,7 +282,7 @@ function kasppaga_enqueue_address_generation_script($order_id, $is_pending = fal
         }
         const qrImg = document.querySelector('.kaspa-qr-image');
         if (qrImg) {
-            const qrData = encodeURIComponent(newAddress + '?amount=' + amount);
+            const qrData = encodeURIComponent(newAddress + '?amount=' + amount + '&payload=4b61737061576f6f');
             const newQrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + qrData + '&bgcolor=ffffff&color=667eea';
             qrImg.src = newQrUrl;
             qrImg.onload = function () {
@@ -477,7 +477,7 @@ function kasppaga_render_payment_methods($payment_address, $kas_amount)
 
     if (strpos($payment_address, 'kaspa:') === 0) {
         // Valid address - generate real QR code
-        $qr_data = urlencode($payment_address . '?amount=' . $kas_amount_formatted);
+        $qr_data = urlencode($payment_address . '?amount=' . $kas_amount_formatted . '&payload=4b61737061576f6f');
         $qr_url = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={$qr_data}&bgcolor=ffffff&color=667eea";
         $show_qr = true;
     } else {
