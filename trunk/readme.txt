@@ -16,7 +16,7 @@ Kaspa Payments Gateway for WooCommerce enables your WooCommerce store to accept 
 
 **Important**: This plugin is not officially affiliated with, endorsed by, or connected to Kaspa, WooCommerce, or their respective owners.
 
-https://www.youtube.com/watch?v=d5C34fyNygw
+https://www.youtube.com/watch?v=WNXYDFlnGjo
 
 = Key Features =
 
