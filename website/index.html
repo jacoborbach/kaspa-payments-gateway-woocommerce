@@ -35,6 +35,92 @@
     }
     </script>
 
+    <!-- FAQ Schema for Rich Snippets -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Is this a custodial service?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. KaspaWoo is 100% non-custodial. Your private keys never leave your wallet. Payments go directly from the customer's wallet to your own Kaspa address."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What are the fees?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "There are zero fees from KaspaWoo. You only pay the standard Kaspa network transaction fees, which are typically less than a fraction of a cent."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Which wallets are supported?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Any Kaspa wallet that allows you to export an Extended Public Key (KPUB/XPUB) is supported. This includes popular wallets like Kaspium and the Kaspa Web Wallet."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How long does it take to set up?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Setup takes less than 5 minutes. Simply install the plugin, import your KPUB, and you're ready to start accepting KAS on your WooCommerce store."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is it secure?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. By using a watch-only wallet (KPUB), your website can generate new receiving addresses but cannot spend your funds. Even if your store is compromised, your funds remain safe in your cold wallet."
+          }
+        }
+      ]
+    }
+    </script>
+
+    <!-- Video Schema -->
+    <script type="application/ld+json">
+    [
+      {
+        "@context": "https://schema.org",
+        "@type": "VideoObject",
+        "name": "KaspaWoo Installation Guide",
+        "description": "How to install and set up the KaspaWoo WooCommerce payment gateway for Kaspa (KAS) cryptocurrency.",
+        "thumbnailUrl": "https://img.youtube.com/vi/d5C34fyNygw/maxresdefault.jpg",
+        "uploadDate": "2026-02-01",
+        "contentUrl": "https://www.youtube.com/watch?v=d5C34fyNygw",
+        "embedUrl": "https://www.youtube.com/embed/d5C34fyNygw",
+        "publisher": {
+          "@type": "Organization",
+          "name": "KaspaWoo",
+          "url": "https://kaspawoo.com"
+        }
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "VideoObject",
+        "name": "KaspaWoo Checkout Demo",
+        "description": "See how customers pay with Kaspa (KAS) cryptocurrency in a WooCommerce store using KaspaWoo.",
+        "thumbnailUrl": "https://img.youtube.com/vi/WNXYDFlnGjo/maxresdefault.jpg",
+        "uploadDate": "2026-02-20",
+        "contentUrl": "https://www.youtube.com/watch?v=WNXYDFlnGjo",
+        "embedUrl": "https://www.youtube.com/embed/WNXYDFlnGjo",
+        "publisher": {
+          "@type": "Organization",
+          "name": "KaspaWoo",
+          "url": "https://kaspawoo.com"
+        }
+      }
+    ]
+    </script>
+
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://kaspawoo.com/">
