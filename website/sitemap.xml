@@ -13,6 +13,18 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://kaspawoo.com/blog/</loc>
+    <lastmod>2026-02-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://kaspawoo.com/blog/kaspa-vs-bitcoin-ethereum-solana-payments.html</loc>
+    <lastmod>2026-02-27</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://kaspawoo.com/privacy.html</loc>
     <lastmod>2026-02-10</lastmod>
     <changefreq>yearly</changefreq>
