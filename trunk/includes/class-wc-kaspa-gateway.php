@@ -38,6 +38,8 @@ class KASPPAGA_WC_Gateway extends WC_Payment_Gateway
         $this->description = $this->get_option('description', 'Pay with Kaspa cryptocurrency. Secure and fast payments.');
         $this->enabled = $this->get_option('enabled', 'yes');
         $this->show_logo = $this->get_option('show_logo', 'yes');
+        $this->brain_url    = $this->get_option('brain_url', '');
+        $this->brain_secret = $this->get_option('brain_secret', '');
 
         // Actions
         add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
@@ -111,6 +113,25 @@ class KASPPAGA_WC_Gateway extends WC_Payment_Gateway
                 'description' => __('Fallback if 1st and 2nd fail.', 'kaspa-payments-gateway-woocommerce'),
                 'default' => 'kaspa_api',
                 'options' => $this->get_price_source_options(true),
+                'desc_tip' => true,
+            ),
+            'brain_heading' => array(
+                'title' => 'Server-Side Derivation (Optional)',
+                'type' => 'title',
+                'description' => 'Connect your Kaspa Payments Service for instant server-side address generation. If unreachable, falls back to browser-side derivation automatically.',
+            ),
+            'brain_url' => array(
+                'title' => 'Service URL',
+                'type' => 'url',
+                'description' => 'Your Vercel endpoint (e.g. https://kaspa-payments-service.vercel.app/api/derive)',
+                'default' => '',
+                'desc_tip' => true,
+            ),
+            'brain_secret' => array(
+                'title' => 'Service Secret',
+                'type' => 'password',
+                'description' => 'The AUTH_SECRET configured in your service.',
+                'default' => '',
                 'desc_tip' => true,
             ),
         );
@@ -301,32 +322,84 @@ class KASPPAGA_WC_Gateway extends WC_Payment_Gateway
     }
 
     /**
-     * FIXED: Generate payment address using your kaspa-simple-wallet library
-     * No external server needed!
+     * Generate payment address — tries server-side derivation first, then browser fallback.
      */
     private function generate_payment_address($order_id)
     {
-        // Get the stored KPUB from wallet setup
         $kpub = get_option('kasppaga_wallet_kpub');
 
         if (!$kpub) {
             return $this->get_fallback_address($order_id);
         }
 
-        // Check main wallet address
+        // Try server-side derivation first
+        if (!empty($this->brain_url)) {
+            $index = intval(get_option('kasppaga_next_address_index', 0));
+            $address = $this->derive_address_from_service($index);
+
+            if ($address) {
+                global $wpdb;
+                $wpdb->query($wpdb->prepare(
+                    "UPDATE {$wpdb->options} SET option_value = %d WHERE option_name = 'kasppaga_next_address_index' AND option_value <= %d",
+                    $index + 1,
+                    $index
+                ));
+                return $address;
+            }
+            // If service failed, fall through to existing browser flow
+        }
+
+        // Existing browser-side fallback (unchanged)
         $main_address = get_option('kasppaga_wallet_address');
 
-        // If address is pending derivation, we'll use a placeholder that will be updated by JS
         if ($main_address === 'pending-derivation' || empty($main_address)) {
             return 'pending-' . $order_id;
         }
 
-        // Validate main address format before using it
         if ($main_address && is_string($main_address) && preg_match('/^kaspa:[a-z0-9]{61,63}$/i', $main_address)) {
             return sanitize_text_field($main_address);
         }
 
         return $this->get_fallback_address($order_id);
+    }
+
+    /**
+     * Derive address from the Kaspa Payments Service (Vercel endpoint).
+     * Returns the address string on success, or false on failure.
+     */
+    private function derive_address_from_service($index)
+    {
+        if (empty($this->brain_url) || empty($this->brain_secret)) {
+            return false;
+        }
+
+        $response = wp_remote_post($this->brain_url, array(
+            'timeout' => 5,
+            'headers' => array(
+                'Authorization' => 'Bearer ' . $this->brain_secret,
+                'Content-Type'  => 'application/json',
+            ),
+            'body' => wp_json_encode(array(
+                'kpub' => get_option('kasppaga_wallet_kpub'),
+                'index' => intval($index),
+            )),
+        ));
+
+        if (is_wp_error($response) || wp_remote_retrieve_response_code($response) !== 200) {
+            error_log('KaspaWoo: Service request failed — ' .
+                (is_wp_error($response) ? $response->get_error_message() : wp_remote_retrieve_response_code($response))
+            );
+            return false;
+        }
+
+        $body = json_decode(wp_remote_retrieve_body($response), true);
+
+        if (empty($body['address']) || !preg_match('/^kaspa:[a-z0-9]{61,63}$/i', $body['address'])) {
+            error_log('KaspaWoo: Invalid address in service response');
+            return false;
+        }
+
+        return $body['address'];
     }
 
     /**

@@ -7,8 +7,8 @@
  * Requires at least: 5.0
  * Requires PHP: 7.4
  * Tested up to: 6.9.1
- * Author: Jorbach
- * Author URI: https://github.com/jacoborbach
+ * Author: KaspaWoo
+ * Author URI: https://kaspawoo.com
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Copyright (C) 2024–2025 Jorbach

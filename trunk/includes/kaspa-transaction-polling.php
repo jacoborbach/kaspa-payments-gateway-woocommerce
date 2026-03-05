@@ -74,9 +74,9 @@ class KASPPAGA_Transaction_Polling
         $url = $this->api_base_url . '/transactions/' . urlencode($txid) . '?inputs=false&outputs=true&resolve_previous_outpoints=no';
 
         $response = wp_remote_get($url, array(
-            'timeout' => 10,
+            'timeout' => 3,
             'headers' => array(
-                'User-Agent' => 'Kaspa-Payments-Gateway-WooCommerce/1.1',
+                'User-Agent' => 'Kaspa-Payments-Gateway-WooCommerce/1.2',
                 'Accept' => 'application/json'
             )
         ));
