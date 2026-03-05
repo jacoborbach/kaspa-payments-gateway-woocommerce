@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to KaspaWoo Pro!</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Outfit:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Ahrefs Analytics -->
+    <script src="https://analytics.ahrefs.com/analytics.js" data-key="//VojJdT64l5LWBLZJ9WnQ" async></script>
+
+    <style>
+        :root {
+            --kaspa-teal: #49eacb;
+            --kaspa-dark: #0a1628;
+            --kaspa-darker: #060f1c;
+            --text-primary: #ffffff;
+            --text-secondary: #8ba3c7;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--kaspa-darker);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .bg-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                linear-gradient(rgba(73, 234, 203, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(73, 234, 203, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            padding: 2rem;
+            max-width: 600px;
+        }
+
+        .icon {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .key-box {
+            background: var(--kaspa-dark);
+            border: 1px solid rgba(73, 234, 203, 0.2);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            text-align: left;
+        }
+
+        .key-label {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .key-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.05rem;
+            color: var(--kaspa-teal);
+            word-break: break-all;
+            cursor: pointer;
+            padding: 0.75rem;
+            background: rgba(73, 234, 203, 0.05);
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+
+        .key-value:hover {
+            background: rgba(73, 234, 203, 0.1);
+        }
+
+        .copied {
+            color: var(--kaspa-teal);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .copied.show {
+            opacity: 1;
+        }
+
+        .steps {
+            text-align: left;
+            margin-bottom: 2rem;
+        }
+
+        .steps h3 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+
+        .steps ol {
+            color: var(--text-secondary);
+            padding-left: 1.5rem;
+        }
+
+        .steps li {
+            margin-bottom: 0.75rem;
+            line-height: 1.5;
+        }
+
+        .steps strong {
+            color: var(--text-primary);
+        }
+
+        .btn {
+            background: var(--kaspa-teal);
+            color: var(--kaspa-dark);
+            padding: 1rem 2rem;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(73, 234, 203, 0.4);
+        }
+
+        .email-note {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 1.5rem;
+        }
+
+        .loading .icon {
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .error-msg {
+            color: #ff6b6b;
+            margin-bottom: 2rem;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-grid"></div>
+
+    <!-- Loading state -->
+    <div class="container loading" id="loading">
+        <div class="icon">&#9889;</div>
+        <h1>Processing your payment...</h1>
+        <p class="subtitle">Generating your API key. This usually takes a few seconds.</p>
+    </div>
+
+    <!-- Success state -->
+    <div class="container hidden" id="success">
+        <div class="icon">&#10003;</div>
+        <h1>Welcome to KaspaWoo Pro!</h1>
+        <p class="subtitle">Your API key has been generated. Copy it and paste it into your WordPress plugin settings.</p>
+
+        <div class="key-box">
+            <div class="key-label">Your API Key</div>
+            <div class="key-value" id="apiKey" onclick="copyKey()"></div>
+            <div class="copied" id="copied">Copied to clipboard!</div>
+        </div>
+
+        <div class="steps">
+            <h3>Next steps:</h3>
+            <ol>
+                <li>Go to your WordPress admin &rarr; <strong>WooCommerce &rarr; Settings &rarr; Payments &rarr; Kaspa</strong></li>
+                <li>Paste your API key in the <strong>API Key</strong> field</li>
+                <li>Save changes &mdash; you're all set!</li>
+            </ol>
+        </div>
+
+        <a href="/" class="btn">Back to KaspaWoo</a>
+        <p class="email-note">We also sent this key to <strong id="email"></strong></p>
+    </div>
+
+    <!-- Error state -->
+    <div class="container hidden" id="error">
+        <div class="icon">&#9888;</div>
+        <h1>Something went wrong</h1>
+        <p class="error-msg" id="errorMsg"></p>
+        <a href="/" class="btn">Back to KaspaWoo</a>
+    </div>
+
+    <script>
+        var API_BASE = 'https://kaspa-payments-service.vercel.app';
+        var params = new URLSearchParams(window.location.search);
+        var sessionId = params.get('session_id');
+
+        function show(id) {
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('success').classList.add('hidden');
+            document.getElementById('error').classList.add('hidden');
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        function copyKey() {
+            var key = document.getElementById('apiKey').textContent;
+            navigator.clipboard.writeText(key);
+            var copied = document.getElementById('copied');
+            copied.classList.add('show');
+            setTimeout(function() { copied.classList.remove('show'); }, 2000);
+        }
+
+        async function fetchKey() {
+            if (!sessionId) {
+                document.getElementById('errorMsg').textContent = 'No session ID found. Please check your email for your API key.';
+                show('error');
+                return;
+            }
+
+            var attempts = 0;
+            var maxAttempts = 15;
+
+            while (attempts < maxAttempts) {
+                try {
+                    var res = await fetch(API_BASE + '/api/checkout/success?session_id=' + encodeURIComponent(sessionId));
+                    if (res.ok) {
+                        var data = await res.json();
+                        document.getElementById('apiKey').textContent = data.apiKey;
+                        if (data.email) {
+                            document.getElementById('email').textContent = data.email;
+                        } else {
+                            document.querySelector('.email-note').style.display = 'none';
+                        }
+                        show('success');
+                        return;
+                    }
+                } catch (e) {}
+
+                attempts++;
+                if (attempts < maxAttempts) {
+                    await new Promise(function(r) { setTimeout(r, 2000); });
+                }
+            }
+
+            document.getElementById('errorMsg').textContent = 'Could not retrieve your API key. Please check your email \u2014 we sent it there too.';
+            show('error');
+        }
+
+        fetchKey();
+    </script>
+</body>
+
+</html>
