@@ -128,9 +128,9 @@ class KASPPAGA_WC_Gateway extends WC_Payment_Gateway
                 'desc_tip' => true,
             ),
             'brain_secret' => array(
-                'title' => 'Service Secret',
+                'title' => 'API Key',
                 'type' => 'password',
-                'description' => 'The AUTH_SECRET configured in your service.',
+                'description' => 'Your KaspaWoo API key (starts with kps_). Get one at kaspawoo.com.',
                 'default' => '',
                 'desc_tip' => true,
             ),
